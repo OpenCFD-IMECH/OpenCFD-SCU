@@ -1,0 +1,77 @@
+# OpenCFD-SCU-Ver1.00 input file 
+GRID_3D = 25   240   20
+PARALLEL_3D = 1   1   1
+STREAM = 0
+CHARTERIC = 0
+TEST = 0
+
+IPERIODIC = 0   0   1
+JAC_BOUND = 1   1   1
+DIF_BOUND = 0   1   0   1   0   0
+NON_REFLETION = 0   1   0   1   0   0
+
+SCHEME_INVIS = WENO7_SYMBO
+#SCHEME_INVIS = NND2
+SCHEME_VIS = CD8
+#SCHEME_INVIS = SCHEME_HYBRIDAUTO
+HY_DP_INTV = 0.01 0.2
+HY_SMOOTH_DP = 0
+HY_STYLE = 2
+HY_PATCH_ZONE = 0
+HY_ZONE0 = 10   25   100   240   5   20   20.0
+
+
+RE = 5581.4
+AMA = 2.9
+GAMMA = 1.40
+PR = 0.70
+T_REF = 108.1
+EPSL_SW = 0.0
+
+DT = 0.01
+END_TIME = 10
+KSTEP_SHOW = 1
+KSTEP_SAVE = 1000
+INIT_STAT = 1
+
+IBC = 108
+#mzmax, mtmax, Inlet_boundary, If_wall_not_normal
+BC_NPARA = 10   5   1   0
+
+#Tw, epsl, x_dis_begin, x_dis_end, beta, x_wall_begin, x_up_bound_begin, SLZ
+BC_RPARA = 2.84   0.2   -320.   -300   0.1   -400.   -50.   14.  
+
+
+#nstep_filter, Filter_X, Filter_Y, Filter_Z, ib, ie, jb, je, kb, ke, Filter_scheme  // s0, rth, Filter_end_time
+#FILTER_NPARA0 = 100   1   1   1   0   25   0   240   0   20   2
+#FILTER_RPARA0 = 1.0   1.e-5   1000000
+
+
+#ANA_EVENT0 = 101   1
+#ANA_EVENT1 = 105   10
+#ANA_NPARA1 = 2   5   10   15
+#ANA_EVENT2 = 107   10
+#ANA_NPARA0 = 0
+#ANA_RPARA0 = 0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#*****************************************************************************************************
+# IBC  nk   nr  IF_symmetry  IF_withleading   Iflag_upperboundary    AoA  Tw     epsl_wall epsl_upper  wall_dis_begin wall_dis_end  //(liftbody)
+  124   3    6        1              0                 1               0.  3.797     0.02        0.          50.           60.
+
+

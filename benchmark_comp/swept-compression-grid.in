@@ -1,0 +1,12 @@
+nx    ny    nz
+25   240    20
+nx_inlet   nx_conner   nx_buff
+12        12          1
+dx_inlet   Lx_inlet   Lx_conner   alfax_buff
+0.05         300.       50.         1.01
+sw_angle   comp_angle
+0.        24.
+High   hy_wall   Lz
+35.    0.01      14.
+Tecplot2D Mesh2D  Tecplot3D
+1           1        0
