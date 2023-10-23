@@ -86,13 +86,13 @@ int main(int argc, char *argv[]){
 //    Write_datayz2d_format();
 //    Write_dataxz2d_format();
     //Write_datayz2d1_format();
-    //Write_dataxyz3d_format();
+    Write_dataxyz3d_format();
 
     //Write_flow1d_inlet();
 
 //    Write_dataxy2d1_format();
 
-    Write_dataxy2d_cf_compress_ramp(Place);
+    //Write_dataxy2d_cf_compress_ramp(Place);
     //Write_dataxy2d_yp();
 
 //-------double-cone---------------------
@@ -2172,8 +2172,8 @@ void Write_dataxy2d_cf_compress_ramp(int i0){//针对压缩折角问题的后处
 }
 
 void Write_dataxyz3d_format(){
-    int div = 10;
-    int m = 7;
+    int div = 1;
+    int m = 0;
     double (*xx3d)[ny][nx] = (double (*)[ny][nx])(x3d);
     double (*yy3d)[ny][nx] = (double (*)[ny][nx])(y3d);
     double (*zz3d)[ny][nx] = (double (*)[ny][nx])(z3d);
@@ -2255,7 +2255,7 @@ void Write_dataxyz3d_format(){
             fp = fopen(filename, "a");
             if(n == 0){
                 fprintf(fp, "variables=x,y,z,d,u,v,w,T\n");
-                fprintf(fp, "zone i=%d ,j=%d ,k=%d\n", MP[m], 2*ny-1, nz);
+                fprintf(fp, "zone i=%d ,j=%d ,k=%d\n", MP[m], ny, nz);
             }
     
             for(int k = 0; k < NPZ[n]; k++){
@@ -2266,14 +2266,14 @@ void Write_dataxyz3d_format(){
                             ppw_buff[k][j][i], ppT_buff[k][j][i]);
                     }
                 }
-                for(int j = ny-2; j >= 0; j--){
-                    for(int i = 0; i < MP[m]; i++){
-                        fprintf(fp, "%15.6f%15.6f%15.6f%15.6f%15.6f%15.6f%15.6f%15.6f\n", xx3d_buff[k][j][i],
-                            -yy3d_buff[k][j][i], zz3d_buff[k][j][i], ppd_buff[k][j][i], ppu_buff[k][j][i], ppv_buff[k][j][i], 
-                            ppw_buff[k][j][i], ppT_buff[k][j][i]);
-                    }
+                // for(int j = ny-2; j >= 0; j--){
+                //     for(int i = 0; i < MP[m]; i++){
+                //         fprintf(fp, "%15.6f%15.6f%15.6f%15.6f%15.6f%15.6f%15.6f%15.6f\n", xx3d_buff[k][j][i],
+                //             -yy3d_buff[k][j][i], zz3d_buff[k][j][i], ppd_buff[k][j][i], ppu_buff[k][j][i], ppv_buff[k][j][i], 
+                //             ppw_buff[k][j][i], ppT_buff[k][j][i]);
+                //     }
 
-                }
+                // }
             }
 
             fclose(fp);

@@ -1,5 +1,5 @@
-nx    ny    nz
-25   240    20
+nx    ny    nz   Nprocs
+25   240    20   1
 nx_inlet   nx_conner   nx_buff
 12        12          1
 dx_inlet   Lx_inlet   Lx_conner   alfax_buff
