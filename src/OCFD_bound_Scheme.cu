@@ -352,7 +352,6 @@ void OCFD_Dz0_bound(cudaField f , cudaField fx , cudaJobPackage job_in , dim3 bl
 void OCFD_bound_non_ref(dim3 *flagxyzb, int Non_ref, cudaJobPackage job){
 	// eyes on field WITH LAPs
 	dim3 size;
-    int flag = 0;
 	jobsize(&job, &size);
 	switch(flagxyzb->x){
 		case 1:
