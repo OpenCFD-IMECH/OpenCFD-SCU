@@ -498,7 +498,7 @@ void read_parameters(){
 
 	dummy_i=5;
 
-    int htmp[3];
+    int htmp[4];
 
     if(my_id == 0){
         htmp[0] = IFLAG_HybridAuto;
@@ -567,61 +567,73 @@ void read_parameters(){
 void* vis_choose_CD6(void* Scheme_vis){
     char *Scheme_VIS = (char *)Scheme_vis;
     if(strcmp(Scheme_VIS, "CD6") == 0) Scheme_vis_ID = 203;
+    return NULL;
 }
 
 void* vis_choose_CD8(void* Scheme_vis){
     char *Scheme_VIS = (char *)Scheme_vis;
     if(strcmp(Scheme_VIS, "CD8") == 0) Scheme_vis_ID = 204;
+    return NULL;
 }
 //----------------------------------------------------------------------
 void* invis_choose_up7(void* Scheme_invis){
     char *Scheme_INVIS = (char *)Scheme_invis;
     if(strcmp(Scheme_INVIS, "UP7") == 0) Scheme_invis_ID = 301;
+    return NULL;
 }
 
 void* invis_choose_weno5(void* Scheme_invis){
     char *Scheme_INVIS = (char *)Scheme_invis;
     if(strcmp(Scheme_INVIS, "WENO5") == 0) Scheme_invis_ID = 302;
+    return NULL;
 }
 
 void* invis_choose_weno7(void* Scheme_invis){
     char *Scheme_INVIS = (char *)Scheme_invis;
     if(strcmp(Scheme_INVIS, "WENO7") == 0) Scheme_invis_ID = 303;
+    return NULL;
 }
 
 void* invis_choose_weno7_symbo(void* Scheme_invis){
     char *Scheme_INVIS = (char *)Scheme_invis;
     if(strcmp(Scheme_INVIS, "WENO7_SYMBO") == 0) Scheme_invis_ID = 304;
+    return NULL;
 }
 
 void* invis_choose_weno7_symbo_limit(void* Scheme_invis){
     char *Scheme_INVIS = (char *)Scheme_invis;
     if(strcmp(Scheme_INVIS, "WENO7_SYMBO_LIM") == 0) Scheme_invis_ID = 305;
+    return NULL;
 }
 
 void* invis_choose_NND2(void* Scheme_invis){
     char *Scheme_INVIS = (char *)Scheme_invis;
     if(strcmp(Scheme_INVIS, "NND2") == 0) Scheme_invis_ID = 306;
+    return NULL;
 }
 
 void* invis_choose_OMP6_HR(void* Scheme_invis){
     char *Scheme_INVIS = (char *)Scheme_invis;
     if(strcmp(Scheme_INVIS, "OMP6_HR") == 0) Scheme_invis_ID = 307;  //for OMP6, High-robust
+    return NULL;
 }
 
 void* invis_choose_OMP6_LD(void* Scheme_invis){
     char *Scheme_INVIS = (char *)Scheme_invis;
     if(strcmp(Scheme_INVIS, "OMP6_LD") == 0) Scheme_invis_ID = 308;  //for OMP6, Low-dissipation
+    return NULL;
 }
 
 void* invis_choose_OMP6_CD8(void* Scheme_invis){
     char *Scheme_INVIS = (char *)Scheme_invis;
     if(strcmp(Scheme_INVIS, "OMP6_CD8") == 0) Scheme_invis_ID = 309;  //for OMP6, 8th-Center
+    return NULL;
 }
 
 void* invis_choose_SCHEME_HYBRIDAUTO(void* Scheme_invis){
     char *Scheme_INVIS = (char *)Scheme_invis;
     if(strcmp(Scheme_INVIS, "SCHEME_HYBRIDAUTO") == 0) Scheme_invis_ID = 310;
+    return NULL;
 }
 
 
