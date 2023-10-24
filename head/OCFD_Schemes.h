@@ -28,9 +28,6 @@ __device__ REAL OCFD_weno7_SYMBO_kernel_M(int WENO_LMT_FLAG, REAL *stencil);
 __global__ void OCFD_weno7_SYMBO_P_kernel(int i, int WENO_LMT_FLAG, dim3 flagxyzb, cudaSoA f, cudaSoA du, cudaField Ajac, cudaJobPackage job);
 __global__ void OCFD_weno7_SYMBO_M_kernel(int i, int WENO_LMT_FLAG, dim3 flagxyzb, cudaSoA f, cudaSoA du, cudaField Ajac, cudaJobPackage job);
 
-
-__device__ void aa(int a, ...);
-
 __device__ REAL OCFD_weno5_kernel_P(REAL *stencil);
 __device__ REAL OCFD_weno5_kernel_M(REAL *stencil);
 __global__ void OCFD_weno5_P_kernel(int i, dim3 flagxyzb, cudaSoA f, cudaSoA du, cudaField Ajac, cudaJobPackage job);
