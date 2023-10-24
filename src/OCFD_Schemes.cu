@@ -189,7 +189,7 @@ __device__ int get_data_kernel(int flagxyz, dim3 *coords, cudaSoA f, int num, RE
             sort[ID1] = get_SoA_LAP(f, x, y-LAP+1, z, num, offset);
 
 			if(x < (job.end.x-job.start.x) && y < (job.end.y-job.start.y-1) && z < (job.end.z-job.start.z))
-            sort[ID1+8] = get_SoA_LAP(f, x, y+LAP+1, z, num, offset);
+				sort[ID1+8] = get_SoA_LAP(f, x, y+LAP+1, z, num, offset);
 
             __syncthreads();
 
@@ -216,7 +216,7 @@ __device__ int get_data_kernel(int flagxyz, dim3 *coords, cudaSoA f, int num, RE
             sort[ID1] = get_SoA_LAP(f, x, y-LAP, z, num, offset);
 
 			if(x < (job.end.x-job.start.x) && y < (job.end.y-job.start.y-1) && z < (job.end.z-job.start.z))
-            sort[ID1+8] = get_SoA_LAP(f, x, y+LAP, z, num, offset);
+				sort[ID1+8] = get_SoA_LAP(f, x, y+LAP, z, num, offset);
 
             __syncthreads();
 
@@ -243,7 +243,7 @@ __device__ int get_data_kernel(int flagxyz, dim3 *coords, cudaSoA f, int num, RE
             sort[ID1] = get_SoA_LAP(f, x, y, z-LAP+1, num, offset);
 
 			if(x < (job.end.x-job.start.x) && y < (job.end.y-job.start.y) && z < (job.end.z-job.start.z-1))
-            sort[ID1+8] = get_SoA_LAP(f, x, y, z+LAP+1, num, offset);
+				sort[ID1+8] = get_SoA_LAP(f, x, y, z+LAP+1, num, offset);
 
             __syncthreads();
 
@@ -270,7 +270,7 @@ __device__ int get_data_kernel(int flagxyz, dim3 *coords, cudaSoA f, int num, RE
             sort[ID1] = get_SoA_LAP(f, x, y, z-LAP, num, offset);
 
 			if(x < (job.end.x-job.start.x) && y < (job.end.y-job.start.y) && z < (job.end.z-job.start.z-1))
-            sort[ID1+8] = get_SoA_LAP(f, x, y, z+LAP, num, offset);
+				sort[ID1+8] = get_SoA_LAP(f, x, y, z+LAP, num, offset);
 
             __syncthreads();
 
