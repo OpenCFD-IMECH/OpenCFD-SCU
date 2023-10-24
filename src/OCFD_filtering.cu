@@ -43,22 +43,22 @@ void set_para_filtering(){
         if(node_ib > npx) flag_i = 0;
         if(node_ie > npx) ie = nx;
         if(node_ie < npx) flag_i = 0;
-        if(npx == 0 && Iperiodic[0] != 1) ib=max(ib, 6);
-        if(npx == NPX0-1 && Iperiodic[0] != 1) ie=min(ie, nx-5);
+        if(npx == 0 && Iperiodic[0] != 1) ib=MAX(ib, 6);
+        if(npx == NPX0-1 && Iperiodic[0] != 1) ie=MIN(ie, nx-5);
 
         if(node_jb < npy) jb = 0;
         if(node_jb > npy) flag_j = 0;
         if(node_je > npy) je = ny;
         if(node_je < npy) flag_j = 0;
-        if(npy == 0 && Iperiodic[1] != 1) jb=max(jb, 6);
-        if(npy == NPY0-1 && Iperiodic[1] != 1) je=min(je, ny-5);
+        if(npy == 0 && Iperiodic[1] != 1) jb=MAX(jb, 6);
+        if(npy == NPY0-1 && Iperiodic[1] != 1) je=MIN(je, ny-5);
 
         if(node_kb < npz) kb = 0;
         if(node_kb > npz) flag_k = 0;
         if(node_ke > npz) ke = nz;
         if(node_ke < npz) flag_k = 0;
-        if(npz == 0 && Iperiodic[2] != 1) kb=max(kb, 6);
-        if(npz == NPZ0-1 && Iperiodic[2] != 1) ke=min(ke, nz-5);
+        if(npz == 0 && Iperiodic[2] != 1) kb=MAX(kb, 6);
+        if(npz == NPZ0-1 && Iperiodic[2] != 1) ke=MIN(ke, nz-5);
 		
         Filter_para[k][1] = flag_i;
 		Filter_para[k][2] = flag_j;
