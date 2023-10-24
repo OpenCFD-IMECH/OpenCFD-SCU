@@ -2,3 +2,5 @@ obj/*
 *.o
 *.out
 *.log
+*.json
+.cache/*
