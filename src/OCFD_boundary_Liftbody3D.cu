@@ -186,21 +186,12 @@ void bc_user_Liftbody3d(){
 	//-------------- boundary condition at i=1  (inlet) -----------------------------------------
 	if (npx == 0)
 	{
-		if (IF_WITHLEADING == 1)
-		{
-			printf(" Lift body with leading is not support yet \n");
-			exit(EXIT_FAILURE);
-		}
-		else
-		{ //  without leading
-			dim3 blockdim , griddim;
-			cal_grid_block_dim(&griddim , &blockdim , 1 , BlockDimY , BlockDimZ , 1 , ny , nz);
+		dim3 blockdim , griddim;
+		cal_grid_block_dim(&griddim , &blockdim , 1 , BlockDimY , BlockDimZ , 1 , ny , nz);
 
-			cudaJobPackage job( dim3(LAP,LAP,LAP) , dim3(LAP+1, ny_lap ,nz_lap) );
+		cudaJobPackage job( dim3(LAP,LAP,LAP) , dim3(LAP+1, ny_lap ,nz_lap) );
 
-			CUDA_LAUNCH(( do_u2d_inlet_kernel<<<griddim , blockdim>>>( *pd_d , *pu_d , *pv_d , *pw_d , *pT_d , *pu2d_inlet_d , job) ));
-
-		}
+		CUDA_LAUNCH(( do_u2d_inlet_kernel<<<griddim , blockdim>>>( *pd_d , *pu_d , *pv_d , *pw_d , *pT_d , *pu2d_inlet_d , job) ));
 	}
 
 	//---------------------bounrary at k=nz (upper) ------------------------------------------
