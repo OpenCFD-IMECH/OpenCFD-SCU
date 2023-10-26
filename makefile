@@ -110,7 +110,7 @@ OPT_Host=-c -std=c99 -I $(MPI_PATH)/include -I $(DEV_PATH)/include
 OPT_Host+= $(OPT_Commen)
 
 OPT_Dev=-dc -I $(MPI_PATH)/include -I $(DEV_PATH)/include
-OPT_Dev+=$(OPT_Commen) -G -code=sm_86 -arch=compute_86
+OPT_Dev+=$(OPT_Commen) -code=sm_86 -arch=compute_86
 
 
 
