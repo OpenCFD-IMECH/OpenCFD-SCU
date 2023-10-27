@@ -99,6 +99,7 @@ void OCFD_time_advance(int KRK)
     cal_grid_block_dim(&griddim , &blockdim , BlockDimX , BlockDimY , BlockDimZ , nx,ny,nz);
     cudaJobPackage job( dim3(0,0,0) , dim3(nx,ny,nz) );
 
+	// The RHS source is added here for every RK step
 	// CUDA_LAUNCH(( source_kernel<<<griddim , blockdim>>>(*pdu_d, *pd_d, *pv_d, *pw_d, *pAyy_d, *pAzz_d, job)));
 
 	switch (KRK)
