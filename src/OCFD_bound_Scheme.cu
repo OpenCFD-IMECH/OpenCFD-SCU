@@ -352,7 +352,6 @@ void OCFD_Dz0_bound(cudaField f , cudaField fx , cudaJobPackage job_in , dim3 bl
 void OCFD_bound_non_ref(dim3 *flagxyzb, int Non_ref, cudaJobPackage job){
 	// eyes on field WITH LAPs
 	dim3 size;
-    int flag = 0;
 	jobsize(&job, &size);
 	switch(flagxyzb->x){
 		case 1:
@@ -575,7 +574,7 @@ __device__ REAL OCFD_weno5_kernel_P_right(REAL *stencil){
 }
 
 
-__device__ REAL OCFD_weno5_kernel_P_lift(REAL *stencil){
+__device__ REAL OCFD_weno5_kernel_P_left(REAL *stencil){
 
 	REAL S0 = 0.0;
 	REAL tmp;
@@ -613,7 +612,7 @@ __device__ REAL OCFD_weno5_kernel_M_right(REAL *stencil){
 }
 
 
-__device__ REAL OCFD_weno5_kernel_M_lift(REAL *stencil){
+__device__ REAL OCFD_weno5_kernel_M_left(REAL *stencil){
 
 	REAL S2 = 0.0;
 	REAL tmp;
@@ -658,7 +657,7 @@ __device__ REAL OCFD_weno5_kernel_P_right_plus(REAL *stencil){
 }
 
 
-__device__ REAL OCFD_weno5_kernel_P_lift_plus(REAL *stencil){
+__device__ REAL OCFD_weno5_kernel_P_left_plus(REAL *stencil){
 
 	REAL S0 = 0.0, S1 = 0.0;
 	REAL tmp;
@@ -710,7 +709,7 @@ __device__ REAL OCFD_weno5_kernel_M_right_plus(REAL *stencil){
 }
 
 
-__device__ REAL OCFD_weno5_kernel_M_lift_plus(REAL *stencil){
+__device__ REAL OCFD_weno5_kernel_M_left_plus(REAL *stencil){
 
 	REAL S1 = 0.0, S2 = 0.0;
 	REAL tmp;
@@ -743,10 +742,10 @@ if(coords <= -ka1){\
 		*tmp = stencil[-ka1+1];\
 	}\
 	if(coords == 1){\
-		*tmp = OCFD_weno5_kernel_P_lift(&stencil[-ka1-2]);\
+		*tmp = OCFD_weno5_kernel_P_left(&stencil[-ka1-2]);\
 	}\
 	if(coords == 2){\
-		*tmp = OCFD_weno5_kernel_P_lift_plus(&stencil[-ka1-2]);\
+		*tmp = OCFD_weno5_kernel_P_left_plus(&stencil[-ka1-2]);\
 	}\
 	if(coords == 3){\
 		*tmp = OCFD_weno5_kernel_P(&stencil[-ka1-2]);\
@@ -844,10 +843,10 @@ __device__ int OCFD_bound_scheme_kernel_p(REAL* tmp, dim3 flagxyzb, dim3 coords,
 #define boundm1(coords)\
 if(coords < -ka1){\
 	if(coords == 0){\
-		*tmp = OCFD_weno5_kernel_M_lift(&stencil[-ka1-2]);\
+		*tmp = OCFD_weno5_kernel_M_left(&stencil[-ka1-2]);\
 	}\
 	if(coords == 1){\
-		*tmp = OCFD_weno5_kernel_M_lift_plus(&stencil[-ka1-2]);\
+		*tmp = OCFD_weno5_kernel_M_left_plus(&stencil[-ka1-2]);\
 	}\
 	if(coords >= 2){\
 		*tmp = OCFD_weno5_kernel_M(&stencil[-ka1-2]);\

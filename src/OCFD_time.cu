@@ -11,6 +11,36 @@
 extern "C"{
 #endif
 
+// 旋转源项
+// __global__ void source_kernel(cudaSoA du , cudaField rho , cudaField v, cudaField w, cudaField yy, cudaField zz, cudaJobPackage job)
+// {
+//     // eyes on no-lap region
+//     unsigned int x = blockDim.x * blockIdx.x + threadIdx.x + job.start.x;
+//     unsigned int y = blockDim.y * blockIdx.y + threadIdx.y + job.start.y;
+//     unsigned int z = blockDim.z * blockIdx.z + threadIdx.z + job.start.z;
+
+//     // TODO: define omega elsewhere
+//     REAL Omega = 0.002;
+
+//     if( x<job.end.x && y<job.end.y && z<job.end.z){
+
+//         REAL y_ = get_Field_LAP(yy, x+LAP,y+LAP,z+LAP);
+//         REAL z_ = get_Field_LAP(zz, x+LAP,y+LAP,z+LAP);
+//         REAL rho_ = get_Field_LAP(rho, x+LAP,y+LAP,z+LAP);
+//         REAL v_ = get_Field_LAP(v, x+LAP,y+LAP,z+LAP);
+//         REAL w_ = get_Field_LAP(w, x+LAP,y+LAP,z+LAP);
+
+//         REAL f_2 = rho_*(Omega*Omega * y_ + 2.0 * Omega * w_);
+//         REAL f_3 = rho_*(Omega*Omega * z_ - 2.0 * Omega * v_);
+//         REAL f_4 = rho_* Omega*Omega * (v_ * y_  + w_ * z_);
+
+//         get_SoA(du , x,y,z , 2) += f_2;
+//         get_SoA(du , x,y,z , 3) += f_3;
+//         get_SoA(du , x,y,z , 4) += f_4;
+
+//     }
+// }
+
 __global__ void OCFD_time_advance_ker1(cudaSoA f , cudaSoA fn , cudaSoA du , cudaJobPackage job)
 {
 	unsigned int x = blockDim.x * blockIdx.x + threadIdx.x + job.start.x;
@@ -68,6 +98,9 @@ void OCFD_time_advance(int KRK)
 	dim3 griddim , blockdim;
     cal_grid_block_dim(&griddim , &blockdim , BlockDimX , BlockDimY , BlockDimZ , nx,ny,nz);
     cudaJobPackage job( dim3(0,0,0) , dim3(nx,ny,nz) );
+
+	// The RHS source is added here for every RK step
+	// CUDA_LAUNCH(( source_kernel<<<griddim , blockdim>>>(*pdu_d, *pd_d, *pv_d, *pw_d, *pAyy_d, *pAzz_d, job)));
 
 	switch (KRK)
 	{

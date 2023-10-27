@@ -20,6 +20,9 @@
 #include "OCFD_mpi_dev.h"
 #include "OCFD_filtering.h"
 
+#ifdef PROFILING
+#include <cuda_profiler_api.h>
+#endif
 
 #ifdef __cplusplus
 extern "C"{
@@ -42,7 +45,13 @@ int main(int argc, char *argv[]){
 
     init();
 
+#ifdef PROFILING
+cudaProfilerStart();
+#endif
     NS_solver_real();
+#ifdef PROFILING
+cudaProfilerStop();
+#endif
 
     opencfd_mem_finalize_all();
 

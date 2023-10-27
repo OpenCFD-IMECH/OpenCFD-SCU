@@ -298,7 +298,7 @@ void gridxy(){
             b = bnew;
             continue_b += 1;
         }
-        while(abs(bnew - b) > 1.e-6);
+        while(fabs(bnew - b) > 1.e-6);
         if(continue_b < 10) goto continue_bnew; 
         
         a = 1./(exp(b) - 1.);

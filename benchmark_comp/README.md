@@ -1,0 +1,5 @@
+- Generate mesh: `mpicc swept-compression-ramp.c -o mesh; ./mesh`, input file: `swept-compression-grid.in `
+- Read inlet and enerate initial field: `mpicc init3d-inlet1d.c -o init; ./init`, input file: `opencfd-scu.in` and `flow1d-inlet.dat`
+- `ln -s flow3d0.dat opencfd.dat`
+- Run the solver: `./opencfd-scu.out`
+- Post processing: `mpicc post-compression-ramp.c -o post; ln -s OCFD*.dat opencfd.ana; ./post`

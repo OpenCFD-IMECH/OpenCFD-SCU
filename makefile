@@ -27,14 +27,14 @@ DEV_PATH=/opt/rocm/hip/
 
 
 DEV=hipcc
-HOST=mpicxx
+HOST=mpicc
 
 OPT_Commen=-O3
 
 OPT_Host=-c -std=c99 -I $(DEV_PATH)/include -I $(DEV_PATH)/include/hip/hcc_detail/cuda -D __HIP_PLATFORM_HCC__ -D __HIPCC__
 OPT_Host+= $(OPT_Commen)
 
-OPT_Dev=-c -I /usr/include/x86_64-linux-gnu/mpich
+OPT_Dev=-c -I /opt/hpc/software/mpi/hpcx/v2.7.4/gcc-7.3.1/include
 OPT_Dev+=$(OPT_Commen)
 
 SRC:=$(patsubst src/%.c,src_hip/%.c, $(SRC))
@@ -81,15 +81,14 @@ obj/%.o : src_hip/%.cpp head_hip/%.h
 	$(DEV) $(OPT_Dev) -I head_hip/ $< -o $@
 
 clean:
-	rm -f *.o *.out obj/*.o obj/*.a src_hip/*  head_hip/* opencfd_hip.c
+	rm -rf *.o *.out obj/ src_hip/  head_hip/ opencfd_hip.c
 
 else
 #nvcc compiler
 
-MPI_PATH=/usr/
-
+MPI_PATH=/usr/local/mpi
 #MPI_PATH=/home/dglin/intel/compilers_and_libraries_2019.4.243/linux/mpi/intel64/
-DEV_PATH=/usr/local/cuda-11.6/
+DEV_PATH=/usr/local/cuda
 
 #ifndef MPICH
 #$(error env MPICH doesn't exist , MPI_PATH has wrong value)
@@ -105,13 +104,13 @@ DEV_PATH=/usr/local/cuda-11.6/
 DEV=nvcc
 HOST=$(MPI_PATH)/bin/mpicc
 
-OPT_Commen=-g
+OPT_Commen=-O3
 
-OPT_Host=-c -std=c99 -I $(DEV_PATH)/include
+OPT_Host=-c -std=c99 -I $(MPI_PATH)/include -I $(DEV_PATH)/include
 OPT_Host+= $(OPT_Commen)
 
-OPT_Dev=-dc -I /usr/include/x86_64-linux-gnu/mpich
-OPT_Dev+=$(OPT_Commen) -G -code=sm_75 -arch=compute_75
+OPT_Dev=-dc -I $(MPI_PATH)/include -I $(DEV_PATH)/include
+OPT_Dev+=$(OPT_Commen) -code=sm_86 -arch=compute_86
 
 
 
@@ -129,7 +128,7 @@ obj/%.o : src/%.cu head/%.h
 
 
 clean:
-	rm -f *.o *.out obj/*.o obj/*.a
+	rm -rf *.o *.out obj/
 
 endif
 

@@ -62,23 +62,7 @@ void Read_parameter(){
         }
     
         fgets(str, 100, fp);
-        fscanf(fp, "%d%d%d%d%d%d\n", &nx_inlet, &nx_flat, &nx_conner_in, &nx_conner_out, &nx_reattach, &nx_buff);
-
-        nx = nx_inlet + nx_flat + nx_conner_in + nx_conner_out + nx_reattach + nx_buff;
-
-        fgets(str, 100, fp);
-        fgets(str, 100, fp);
-
-        fgets(str, 100, fp);
-        fscanf(fp, "%d%d\n", &ny_nearwall, &ny_outer);
-
-        ny = ny_nearwall + ny_outer;
-
-        fgets(str, 100, fp);
-        fgets(str, 100, fp);
-
-        fgets(str, 100, fp);
-        fscanf(fp, "%d\n", &nz);
+        fscanf(fp, "%d%d%d\n", &nx, &ny, &nz);
     
         fclose(fp);
 

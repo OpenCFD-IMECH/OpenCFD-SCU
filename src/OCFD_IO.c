@@ -39,7 +39,7 @@ void read_file(
 	    if (my_id == 0)
 	    {
 	    	FILE *tmp_file;
-	    	if (tmp_file = fopen("Opencfd.msg", "r"))
+	    	if ((tmp_file = fopen("Opencfd.msg", "r")))
 	    	{
 	    		fread(&Irestart_step, sizeof(int), 1, tmp_file);
 	    		fclose(tmp_file);
@@ -108,7 +108,7 @@ void read_file(
             init_time_average();
      	}else{
 	        if (my_id == 0)
-			printf("read average_data begin\n");
+				printf("read average_data begin\n");
 
 			MPI_File tmp_file;
 			MPI_File_open(MPI_COMM_WORLD, filename1, MPI_MODE_RDONLY, MPI_INFO_NULL, &tmp_file);  
