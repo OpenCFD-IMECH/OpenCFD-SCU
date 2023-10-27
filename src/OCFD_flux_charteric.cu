@@ -639,7 +639,7 @@ __device__ void flux_charteric_ptoc_kernel(
     REAL un = u1*n1 + v1*n2 + w1*n3;
     REAL v2 = (u1*u1 + v1*v1 + w1*w1)*0.5;
 
-    //====================S=L（Lift Characteristic Matrix)
+    //====================S=L（Left Characteristic Matrix)
     REAL S11 = 1.0 - KK*v2;
     REAL S12 = KK*u1;
     REAL S13 = KK*v1;
@@ -705,7 +705,7 @@ __device__ void flux_charteric_ctop_kernel(
      REAL m3 = para_ch[12];
      REAL KK = para_ch[13];
 
-    //====================S=L（Lift Characteristic Matrix)
+    //====================S=L（Left Characteristic Matrix)
      REAL S11 = 1.0;
      REAL S12 = 0.0;
      REAL S13 = 0.0;

@@ -167,7 +167,7 @@ void part()
 	// -------New Data TYPE------------------------------------------------------------
 	New_MPI_datatype();
 
-	// --------define proc id:  the right, lift, up, bottom, front and backward  procs
+	// --------define proc id:  the right, left, up, bottom, front and backward  procs
 	npx1 = my_mod1(npx - 1, NPX0);
 	npx2 = my_mod1(npx + 1, NPX0);
 	// 利用comm_world的全局下标查找邻居
