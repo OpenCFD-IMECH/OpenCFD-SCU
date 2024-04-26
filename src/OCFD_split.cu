@@ -141,6 +141,19 @@ __device__ void Stager_Warming_ker(unsigned int x, unsigned int y, unsigned int 
 		get_SoA_LAP(fm, x, y, z, 4) = tmp0 * (E1M * vv + E2M * vvc1 + E3M * vvc2 + W2 * (E2M + E3M));
 }
 
+__device__ void spec_split_ker(unsigned int x, unsigned int y, unsigned int z, REAL u, REAL v, REAL w, cudaSoA spec, cudaSoA fp, cudaSoA fm, REAL A1, REAL A2, REAL A3){
+	REAL un, Ep, Em;
+
+	un = A1*u + A2*v + A3*w;
+	Ep = 0.50 * (un + abs(un));
+	Em = 0.50 * (un - abs(un));
+	
+	for (int n = 0; n < NSPECS; ++n) {
+		get_SoA_LAP(fp, x, y, z, n) = Ep * get_SoA_LAP(spec, x, y, z, n);
+		get_SoA_LAP(fm, x, y, z, n) = Em * get_SoA_LAP(spec, x, y, z, n);
+	}
+}
+
 
 __global__ void split_Jac3d_Stager_Warming_ker(sw_split sw, cudaSoA fp_x, cudaSoA fm_x, cudaSoA fp_y, cudaSoA fm_y, cudaSoA fp_z, cudaSoA fm_z, REAL tmp0, REAL split_C1, REAL split_C3, cudaJobPackage job)
 {
@@ -183,6 +196,43 @@ __global__ void split_Jac3d_Stager_Warming_ker(sw_split sw, cudaSoA fp_x, cudaSo
 	}
 }
 
+__global__ void split_Jac3d_specs_ker(spec_split spec, cudaSoA fp_x, cudaSoA fm_x, cudaSoA fp_y, cudaSoA fm_y, cudaSoA fp_z, cudaSoA fm_z, cudaJobPackage job)
+{
+	// eyes on cells WITH LAPs
+
+	unsigned int x = threadIdx.x + blockIdx.x*blockDim.x + job.start.x;
+	unsigned int y = threadIdx.y + blockIdx.y*blockDim.y + job.start.y;
+	unsigned int z = threadIdx.z + blockIdx.z*blockDim.z + job.start.z;
+
+	if( x<job.end.x && y<job.end.y && z<job.end.z){
+        REAL A1, A2, A3;
+
+        REAL u, v, w;
+
+        u = get_Field_LAP(spec.u, x, y, z);
+        v = get_Field_LAP(spec.v, x, y, z);
+        w = get_Field_LAP(spec.w, x, y, z);
+
+		A1 = get_Field_LAP(spec.Akx, x, y, z);
+		A2 = get_Field_LAP(spec.Aky, x, y, z);
+		A3 = get_Field_LAP(spec.Akz, x, y, z); 
+
+        spec_split_ker(x, y, z, u, v, w, spec.spec, fp_x, fm_x, A1, A2, A3);
+
+        A1 = get_Field_LAP(spec.Aix, x, y, z);
+		A2 = get_Field_LAP(spec.Aiy, x, y, z);
+		A3 = get_Field_LAP(spec.Aiz, x, y, z); 
+
+        spec_split_ker(x, y, z, u, v, w, spec.spec, fp_y, fm_y, A1, A2, A3);
+
+        A1 = get_Field_LAP(spec.Asx, x, y, z);
+		A2 = get_Field_LAP(spec.Asy, x, y, z);
+		A3 = get_Field_LAP(spec.Asz, x, y, z); 
+
+        spec_split_ker(x, y, z, u, v, w, spec.spec, fp_z, fm_z, A1, A2, A3);
+	}
+}
+
 void Stager_Warming(cudaJobPackage job_in, cudaSoA *fp_x, cudaSoA *fm_x, cudaSoA *fp_y, cudaSoA *fm_y, cudaSoA *fp_z, cudaSoA *fm_z, cudaStream_t *stream){
 	dim3 blockdim , griddim, size;
 	jobsize(&job_in, &size);
@@ -195,6 +245,20 @@ void Stager_Warming(cudaJobPackage job_in, cudaSoA *fp_x, cudaSoA *fm_x, cudaSoA
     sw_split sw = {*pd_d, *pu_d, *pv_d, *pw_d, *pcc_d, *pAkx_d, *pAky_d, *pAkz_d, *pAix_d, *pAiy_d, *pAiz_d, *pAsx_d, *pAsy_d, *pAsz_d};
 	
 	CUDA_LAUNCH(( split_Jac3d_Stager_Warming_ker<<<griddim , blockdim, 0, *stream>>>(sw, *fp_x, *fm_x, *fp_y, *fm_y, *fp_z, *fm_z, tmp0, split_C1, split_C3, job) ));
+}
+
+void split_spec(cudaJobPackage job_in, cudaSoA *fp_x, cudaSoA *fm_x, cudaSoA *fp_y, cudaSoA *fm_y, cudaSoA *fp_z, cudaSoA *fm_z, cudaStream_t *stream){
+	dim3 blockdim , griddim, size;
+	jobsize(&job_in, &size);
+	//cal_grid_block_dim(&griddim, &blockdim, BlockDimX, BlockDimY, BlockDimZ, size.x+2*LAP, size.y+2*LAP, size.z+2*LAP);
+	cal_grid_block_dim(&griddim, &blockdim, 8, 4, 4, size.x+2*LAP, size.y+2*LAP, size.z+2*LAP);
+
+	cudaJobPackage job( dim3(job_in.start.x-LAP, job_in.start.y-LAP, job_in.start.z-LAP), 
+	                    dim3(job_in.end.x + LAP, job_in.end.y + LAP, job_in.end.z + LAP) );
+
+    spec_split spec = {*pspec_d, *pu_d, *pv_d, *pw_d, *pAkx_d, *pAky_d, *pAkz_d, *pAix_d, *pAiy_d, *pAiz_d, *pAsx_d, *pAsy_d, *pAsz_d};
+	
+	CUDA_LAUNCH(( split_Jac3d_specs_ker<<<griddim , blockdim, 0, *stream>>>(spec, *fp_x, *fm_x, *fp_y, *fm_y, *fp_z, *fm_z, job) ));
 }
 
 /*

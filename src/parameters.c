@@ -110,6 +110,12 @@ REAL *pAmu; // viscous 3d [nz][nt][nx]
 REAL *pd,*pu,*pv,*pw,*pT,*pP; //  [nz+2*LAP][ny+2*LAP][nx+2*LAP]
 REAL *pf,*pfn,*pdu; // [5][nz][ny][nx]
 
+REAL *pO;
+REAL *pO2;
+REAL *pN;
+REAL *pNO;
+REAL *pN2;
+
 // used in filtering
 REAL *pf_lap; // [nz+2*LAP][ny+2*LAP][nx+2*LAP][5]
 

@@ -86,7 +86,7 @@ clean:
 else
 #nvcc compiler
 
-MPI_PATH=/usr/local/mpi
+MPI_PATH=/usr/local/openmpi-4.1.5
 #MPI_PATH=/home/dglin/intel/compilers_and_libraries_2019.4.243/linux/mpi/intel64/
 DEV_PATH=/usr/local/cuda
 

@@ -119,18 +119,26 @@ void opencfd_mem_finalize_mpi_dev(){
     }
 }
 
-void exchange_boundary_xyz_packed_dev(REAL *hostptr , cudaField * devptr)
+void exchange_boundary_xyz_packed_dev(cudaField * devptr)
 {
-	exchange_boundary_x_packed_dev(hostptr , devptr, Iperiodic[0]);
-	exchange_boundary_y_packed_dev(hostptr , devptr, Iperiodic[1]);
-	exchange_boundary_z_packed_dev(hostptr , devptr, Iperiodic[2]);
+	exchange_boundary_x_packed_dev(devptr, Iperiodic[0]);
+	exchange_boundary_y_packed_dev(devptr, Iperiodic[1]);
+	exchange_boundary_z_packed_dev(devptr, Iperiodic[2]);
 }
 
-void exchange_boundary_xyz_Async_packed_dev(REAL *hostptr , cudaField * devptr , cudaStream_t *stream)
+void exchange_spec_boundary_xyz_packed_dev(cudaSoA * devptr)
 {
-	exchange_boundary_x_Async_packed_dev(hostptr , devptr, Iperiodic[0], stream);
-	exchange_boundary_y_Async_packed_dev(hostptr , devptr, Iperiodic[1], stream);
-	exchange_boundary_z_Async_packed_dev(hostptr , devptr, Iperiodic[2], stream);
+	exchange_spec_boundary_x_packed_dev(devptr, Iperiodic[0]);
+	exchange_spec_boundary_y_packed_dev(devptr, Iperiodic[1]);
+	exchange_spec_boundary_z_packed_dev(devptr, Iperiodic[2]);
+}
+
+
+void exchange_boundary_xyz_Async_packed_dev(cudaField * devptr , cudaStream_t *stream)
+{
+	exchange_boundary_x_Async_packed_dev(devptr, Iperiodic[0], stream);
+	exchange_boundary_y_Async_packed_dev(devptr, Iperiodic[1], stream);
+	exchange_boundary_z_Async_packed_dev(devptr, Iperiodic[2], stream);
 }
 
 
@@ -165,6 +173,35 @@ __global__ void cudaFieldBoundaryUnpack_kernel(cudaField data , cudaFieldPack pa
     }
 }
 
+__global__ void cudaSoABoundaryPack_kernel(cudaSoA data , cudaFieldPack pack , cudaJobPackage job, int n){
+    // eyes on cells WITH LAPs
+	unsigned int x = blockDim.x * blockIdx.x + threadIdx.x;
+	unsigned int y = blockDim.y * blockIdx.y + threadIdx.y;
+    unsigned int z = blockDim.z * blockIdx.z + threadIdx.z;
+	if(x < job.end.x && y < job.end.y && z < job.end.z){
+
+        unsigned int pos = x + job.end.x*(y + job.end.y*z);
+        x += job.start.x;
+        y += job.start.y;
+        z += job.start.z;
+        *(pack.ptr + pos) = get_SoA_LAP(data , x,y,z, n);
+        
+    }
+}
+__global__ void cudaSoABoundaryUnpack_kernel(cudaSoA data , cudaFieldPack pack , cudaJobPackage job, int n){
+    // eyes on cells WITH LAPs
+	unsigned int x = blockDim.x * blockIdx.x + threadIdx.x;
+	unsigned int y = blockDim.y * blockIdx.y + threadIdx.y;
+    unsigned int z = blockDim.z * blockIdx.z + threadIdx.z;
+	if(x < job.end.x && y < job.end.y && z < job.end.z){
+
+        unsigned int pos = x + job.end.x*(y + job.end.y*z);
+        x += job.start.x;
+        y += job.start.y;
+        z += job.start.z;
+        get_SoA_LAP(data , x,y,z, n) = *(pack.ptr + pos);
+    }
+}
 
 void cudaFieldBoundaryPack(cudaField * data , cudaFieldPack * pack, cudaJobPackage job_in)
 {
@@ -183,7 +220,24 @@ void cudaFieldBoundaryUnpack(cudaField * data , cudaFieldPack * pack , cudaJobPa
     CUDA_LAUNCH(( cudaFieldBoundaryUnpack_kernel<<<griddim,blockdim>>>(*data , *pack , job_in) ))
 }
 
-void exchange_boundary_x_packed_dev(REAL *hostptr , cudaField * devptr, int Iperiodic1)
+void cudaSoABoundaryPack(cudaSoA * data , cudaFieldPack * pack, cudaJobPackage job_in, int n)
+{
+    // job_in , to packed data , with LAP
+    // job_in.start , job_in.size
+    dim3 griddim , blockdim;
+    cal_grid_block_dim(&griddim , &blockdim , BlockDimX , BlockDimY , BlockDimZ , job_in.end.x , job_in.end.y , job_in.end.z);
+    CUDA_LAUNCH(( cudaSoABoundaryPack_kernel<<<griddim,blockdim>>>(*data , *pack , job_in, n) ))
+}
+
+void cudaSoABoundaryUnpack(cudaSoA * data , cudaFieldPack * pack , cudaJobPackage job_in, int n){
+    // job_in , to packed data , with LAP
+    // job_in.start , job_in.size
+    dim3 griddim , blockdim;
+    cal_grid_block_dim(&griddim , &blockdim , BlockDimX , BlockDimY , BlockDimZ , job_in.end.x , job_in.end.y , job_in.end.z);
+    CUDA_LAUNCH(( cudaSoABoundaryUnpack_kernel<<<griddim,blockdim>>>(*data , *pack , job_in, n) ))
+}
+
+void exchange_boundary_x_packed_dev(cudaField * devptr, int Iperiodic1)
 {   
     cudaFieldPack * pack;
     MPI_Status status;
@@ -219,7 +273,7 @@ void exchange_boundary_x_packed_dev(REAL *hostptr , cudaField * devptr, int Iper
 }
 
 
-void exchange_boundary_y_packed_dev(REAL *hostptr , cudaField * devptr, int Iperiodic1)
+void exchange_boundary_y_packed_dev(cudaField * devptr, int Iperiodic1)
 {   
     cudaFieldPack * pack;
     MPI_Status status;
@@ -255,7 +309,7 @@ void exchange_boundary_y_packed_dev(REAL *hostptr , cudaField * devptr, int Iper
 }
 
 
-void exchange_boundary_z_packed_dev(REAL *hostptr , cudaField * devptr, int Iperiodic1)
+void exchange_boundary_z_packed_dev(cudaField * devptr, int Iperiodic1)
 {   
     cudaFieldPack * pack;
     MPI_Status status;
@@ -289,6 +343,114 @@ void exchange_boundary_z_packed_dev(REAL *hostptr , cudaField * devptr, int Iper
 
 }
 
+void exchange_spec_boundary_x_packed_dev(cudaSoA * devptr, int Iperiodic1)
+{   
+    cudaFieldPack * pack;
+    MPI_Status status;
+    int size = LAP*ny*nz;
+    pack = b_xm;
+    cudaJobPackage job(dim3(LAP,LAP,LAP),dim3(LAP,ny,nz));
+
+    for (int n = 0; n < NSPECS; ++n) {
+        if(npx != 0 || Iperiodic1 == 1){
+            cudaSoABoundaryPack(devptr , pack ,job, n);
+            CUDA_CALL(( cudaMemcpy(pack_send_x , pack->ptr , size*sizeof(REAL) , cudaMemcpyDeviceToHost) ))
+        }
+        MPI_Sendrecv(pack_send_x , size , OCFD_DATA_TYPE , ID_XM1 , 1 , pack_recv_x , size , OCFD_DATA_TYPE , ID_XP1 , 1 , MPI_COMM_WORLD , &status);
+        if (npx != NPX0 - 1 || Iperiodic1 == 1){
+            CUDA_CALL(( cudaMemcpy(pack->ptr , pack_recv_x , size*sizeof(REAL) , cudaMemcpyHostToDevice) ))
+            job.start.x = nx_lap;
+            cudaSoABoundaryUnpack(devptr, pack ,job, n);
+        }
+        
+
+
+        if(npx != NPX0 - 1 || Iperiodic1 == 1){
+            job.start.x = nx;
+            cudaSoABoundaryPack(devptr , pack ,job, n);
+            CUDA_CALL(( cudaMemcpy(pack_send_x , pack->ptr , size*sizeof(REAL) , cudaMemcpyDeviceToHost) ))
+        }
+        MPI_Sendrecv(pack_send_x , size , OCFD_DATA_TYPE , ID_XP1 , 1 , pack_recv_x , size , OCFD_DATA_TYPE , ID_XM1 , 1 , MPI_COMM_WORLD , &status);
+        if (npx != 0 || Iperiodic1 == 1){
+            CUDA_CALL(( cudaMemcpy(pack->ptr , pack_recv_x , size*sizeof(REAL) , cudaMemcpyHostToDevice) ))
+            job.start.x = 0;
+            cudaSoABoundaryUnpack(devptr, pack ,job, n);
+        }
+    }
+}
+
+
+void exchange_spec_boundary_y_packed_dev(cudaSoA * devptr, int Iperiodic1)
+{   
+    cudaFieldPack * pack;
+    MPI_Status status;
+    int size = LAP*nx*nz;
+    pack = b_ym;
+    cudaJobPackage job(dim3(LAP,LAP,LAP),dim3(nx , LAP ,nz));
+
+    for (int n = 0; n < NSPECS; ++n) {
+        if(npy != 0 || Iperiodic1 == 1){
+            cudaSoABoundaryPack(devptr , pack ,job, n);
+            CUDA_CALL(( cudaMemcpy(pack_send_y , pack->ptr , size*sizeof(REAL) , cudaMemcpyDeviceToHost) ))
+        }
+        MPI_Sendrecv(pack_send_y , size , OCFD_DATA_TYPE , ID_YM1 , 1 , pack_recv_y , size , OCFD_DATA_TYPE , ID_YP1 , 1 , MPI_COMM_WORLD , &status);
+        if (npy != NPY0 - 1 || Iperiodic1 == 1){
+            CUDA_CALL(( cudaMemcpy(pack->ptr , pack_recv_y , size*sizeof(REAL) , cudaMemcpyHostToDevice) ))
+            job.start.y = ny_lap;
+            cudaSoABoundaryUnpack(devptr, pack ,job, n);
+        }
+        
+
+        if(npy != NPY0 - 1 || Iperiodic1 == 1){
+            job.start.y = ny;
+            cudaSoABoundaryPack(devptr , pack ,job, n);
+            CUDA_CALL(( cudaMemcpy(pack_send_y , pack->ptr , size*sizeof(REAL) , cudaMemcpyDeviceToHost) ))
+        }
+        MPI_Sendrecv(pack_send_y , size , OCFD_DATA_TYPE , ID_YP1 , 1 , pack_recv_y , size , OCFD_DATA_TYPE , ID_YM1 , 1 , MPI_COMM_WORLD , &status);
+        if (npy != 0 || Iperiodic1 == 1){
+            CUDA_CALL(( cudaMemcpy(pack->ptr , pack_recv_y , size*sizeof(REAL) , cudaMemcpyHostToDevice) ))
+            job.start.y = 0;
+            cudaSoABoundaryUnpack(devptr, pack ,job, n);
+        }
+    }
+}
+
+
+void exchange_spec_boundary_z_packed_dev(cudaSoA * devptr, int Iperiodic1)
+{   
+    cudaFieldPack * pack;
+    MPI_Status status;
+    int size = LAP*nx*ny;
+    pack = b_zm;
+    cudaJobPackage job(dim3(LAP,LAP,LAP),dim3(nx,ny,LAP));
+
+    for (int n = 0; n < NSPECS; ++n) {
+        if(npz != 0 || Iperiodic1 == 1){
+            cudaSoABoundaryPack(devptr , pack ,job, n);
+            CUDA_CALL(( cudaMemcpy(pack_send_z , pack->ptr , size*sizeof(REAL) , cudaMemcpyDeviceToHost) ))
+        }
+        MPI_Sendrecv(pack_send_z , size , OCFD_DATA_TYPE , ID_ZM1 , 1 , pack_recv_z , size , OCFD_DATA_TYPE , ID_ZP1 , 1 , MPI_COMM_WORLD , &status);
+        if (npz != NPZ0 - 1 || Iperiodic1 == 1){
+            CUDA_CALL(( cudaMemcpy(pack->ptr , pack_recv_z , size*sizeof(REAL) , cudaMemcpyHostToDevice) ))
+            job.start.z = nz_lap;
+            cudaSoABoundaryUnpack(devptr, pack ,job, n);
+        }
+        
+
+        if(npz != NPZ0 - 1 || Iperiodic1 == 1){
+            job.start.z = nz;
+            cudaSoABoundaryPack(devptr , pack ,job, n);
+            CUDA_CALL(( cudaMemcpy(pack_send_z , pack->ptr , size*sizeof(REAL) , cudaMemcpyDeviceToHost) ))
+        }
+        MPI_Sendrecv(pack_send_z , size , OCFD_DATA_TYPE , ID_ZP1 , 1 , pack_recv_z , size , OCFD_DATA_TYPE , ID_ZM1 , 1 , MPI_COMM_WORLD , &status);
+        if (npz != 0 || Iperiodic1 == 1){
+            CUDA_CALL(( cudaMemcpy(pack->ptr , pack_recv_z , size*sizeof(REAL) , cudaMemcpyHostToDevice) ))
+            job.start.z = 0;
+            cudaSoABoundaryUnpack(devptr, pack ,job, n);
+        }
+    }
+}
+
 void cudaFieldBoundaryPack_Async(cudaField * data , cudaFieldPack * pack, cudaJobPackage job_in, cudaStream_t *stream)
 {
     // job_in , to packed data , with LAP
@@ -307,7 +469,7 @@ void cudaFieldBoundaryUnpack_Async(cudaField * data , cudaFieldPack * pack , cud
 }
 
 // 假设 ， 仅仅交换边界
-void exchange_boundary_x_Async_packed_dev(REAL *hostptr , cudaField * devptr, int Iperiodic1 , cudaStream_t *stream)
+void exchange_boundary_x_Async_packed_dev(cudaField * devptr, int Iperiodic1 , cudaStream_t *stream)
 {   
     cudaFieldPack * pack;
     MPI_Status status;
@@ -344,7 +506,7 @@ void exchange_boundary_x_Async_packed_dev(REAL *hostptr , cudaField * devptr, in
     
 }
 
-void exchange_boundary_y_Async_packed_dev(REAL *hostptr , cudaField * devptr, int Iperiodic1 , cudaStream_t *stream)
+void exchange_boundary_y_Async_packed_dev(cudaField * devptr, int Iperiodic1 , cudaStream_t *stream)
 {   
     cudaFieldPack * pack;
     MPI_Status status;
@@ -381,7 +543,7 @@ void exchange_boundary_y_Async_packed_dev(REAL *hostptr , cudaField * devptr, in
 
 }
 
-void exchange_boundary_z_Async_packed_dev(REAL *hostptr , cudaField * devptr, int Iperiodic1 , cudaStream_t *stream)
+void exchange_boundary_z_Async_packed_dev(cudaField * devptr, int Iperiodic1 , cudaStream_t *stream)
 {   
     cudaFieldPack * pack;
     MPI_Status status;

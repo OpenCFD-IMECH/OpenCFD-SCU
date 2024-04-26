@@ -17,6 +17,8 @@ void* du_Jacobian3d_all(void* pthread_id);
 void* du_invis_Jacobian3d(void* pthread_id);
 void* du_invis_Jacobian3d_all(void* pthread_id);
 
+void* dspec_invis_Jacobian3d(void* pthread_id);
+
 void* du_invis_Jacobian3d_outer_exchange(cudaStream_t *stream);
 void* du_invis_Jacobian3d_outer_x(cudaStream_t *stream);
 void* du_invis_Jacobian3d_outer_y(cudaStream_t *stream);

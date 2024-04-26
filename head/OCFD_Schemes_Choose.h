@@ -26,6 +26,15 @@ void OCFD_dz1(cudaSoA pf, cudaSoA pdu, cudaField Ajac, cudaField u, cudaField v,
 void OCFD_dz2(cudaSoA pf, cudaSoA pdu, cudaField Ajac, cudaField u, cudaField v, cudaField w, cudaField cc, 
 	cudaField Ax, cudaField Ay, cudaField Az, cudaJobPackage job_in, dim3 blockdim_in, cudaStream_t *stream, int boundl, int boundr);
 
+void OCFD_dx1_spec(cudaSoA pf, cudaSoA pdu, cudaField Ajac, cudaField Ax, cudaField Ay, cudaField Az, cudaJobPackage job_in, dim3 blockdim_in, cudaStream_t *stream, int boundl, int boundr);
+void OCFD_dx2_spec(cudaSoA pf, cudaSoA pdu, cudaField Ajac, cudaField Ax, cudaField Ay, cudaField Az, cudaJobPackage job_in, dim3 blockdim_in, cudaStream_t *stream, int boundl, int boundr);
+
+void OCFD_dy1_spec(cudaSoA pf, cudaSoA pdu, cudaField Ajac, cudaField Ax, cudaField Ay, cudaField Az, cudaJobPackage job_in, dim3 blockdim_in, cudaStream_t *stream, int boundl, int boundr);
+void OCFD_dy2_spec(cudaSoA pf, cudaSoA pdu, cudaField Ajac, cudaField Ax, cudaField Ay, cudaField Az, cudaJobPackage job_in, dim3 blockdim_in, cudaStream_t *stream, int boundl, int boundr);
+
+void OCFD_dz1_spec(cudaSoA pf, cudaSoA pdu, cudaField Ajac, cudaField Ax, cudaField Ay, cudaField Az, cudaJobPackage job_in, dim3 blockdim_in, cudaStream_t *stream, int boundl, int boundr);
+void OCFD_dz2_spec(cudaSoA pf, cudaSoA pdu, cudaField Ajac, cudaField Ax, cudaField Ay, cudaField Az, cudaJobPackage job_in, dim3 blockdim_in, cudaStream_t *stream, int boundl, int boundr);
+
 void OCFD_dx0_jac(cudaField pf , cudaField pfx , cudaJobPackage job_in , dim3 blockdim_in, cudaStream_t *stream, int bound);
 void OCFD_dy0_jac(cudaField pf , cudaField pfx , cudaJobPackage job_in , dim3 blockdim_in, cudaStream_t *stream, int bound);
 void OCFD_dz0_jac(cudaField pf , cudaField pfx , cudaJobPackage job_in , dim3 blockdim_in, cudaStream_t *stream, int bound);

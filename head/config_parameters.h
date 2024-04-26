@@ -16,6 +16,8 @@ typedef double REAL;
 // unknown number
 #define NVARS 5                         
 
+#define NSPECS 5                         
+
 #define hipWarpSize 64
 
 typedef struct scheme_choose{

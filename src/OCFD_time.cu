@@ -93,6 +93,52 @@ __global__ void OCFD_time_advance_ker3(cudaSoA f , cudaSoA fn , cudaSoA du , cud
 	}
 }
 
+__global__ void OCFD_spec_time_advance_ker1(cudaSoA f , cudaSoA fn , cudaSoA du , cudaJobPackage job, int N)
+{
+	unsigned int x = blockDim.x * blockIdx.x + threadIdx.x + job.start.x;
+	unsigned int y = blockDim.y * blockIdx.y + threadIdx.y + job.start.y;
+	unsigned int z = blockDim.z * blockIdx.z + threadIdx.z + job.start.z;
+
+	if(x < job.end.x && y < job.end.y && z < job.end.z){
+		for (int n=0; n<N; ++n) {
+			get_SoA_LAP(f , x+LAP,y+LAP,z+LAP , n) = get_SoA_LAP(fn , x+LAP,y+LAP,z+LAP , n) + dt_d*get_SoA(du , x,y,z , n);
+		}
+	}
+}
+
+__global__ void OCFD_spec_time_advance_ker2(cudaSoA f , cudaSoA fn , cudaSoA du , cudaJobPackage job, int N)
+{
+	unsigned int x = blockDim.x * blockIdx.x + threadIdx.x + job.start.x;
+	unsigned int y = blockDim.y * blockIdx.y + threadIdx.y + job.start.y;
+	unsigned int z = blockDim.z * blockIdx.z + threadIdx.z + job.start.z;
+
+	if(x < job.end.x && y < job.end.y && z < job.end.z){
+		REAL tmp1 = 3.0 / 4.0;
+		REAL tmp2 = 1.0 / 4.0;
+
+		for (int n=0; n<N; ++n) {
+			get_SoA_LAP(f , x+LAP,y+LAP,z+LAP , n) = tmp1*get_SoA_LAP(fn , x+LAP,y+LAP,z+LAP , n) + tmp2*( get_SoA_LAP(f , x+LAP,y+LAP,z+LAP , n) + dt_d*get_SoA(du , x,y,z , n) );
+		}
+	}
+}
+
+__global__ void OCFD_spec_time_advance_ker3(cudaSoA f , cudaSoA fn , cudaSoA du , cudaJobPackage job, int N)
+{
+	unsigned int x = blockDim.x * blockIdx.x + threadIdx.x + job.start.x;
+	unsigned int y = blockDim.y * blockIdx.y + threadIdx.y + job.start.y;
+	unsigned int z = blockDim.z * blockIdx.z + threadIdx.z + job.start.z;
+
+	if(x < job.end.x && y < job.end.y && z < job.end.z){
+		REAL tmp1 = 1.0 / 3.0;
+		REAL tmp2 = 2.0 / 3.0;
+
+		for (int n=0; n<N; ++n) {
+			get_SoA_LAP(f , x+LAP,y+LAP,z+LAP , n) = tmp1*get_SoA_LAP(fn , x+LAP,y+LAP,z+LAP , n) + tmp2*( get_SoA_LAP(f , x+LAP,y+LAP,z+LAP , n) + dt_d*get_SoA(du , x,y,z , n) );
+		}
+	}
+}
+
+
 void OCFD_time_advance(int KRK)
 {
 	dim3 griddim , blockdim;
@@ -107,16 +153,19 @@ void OCFD_time_advance(int KRK)
 		case 1:
 		{
 			CUDA_LAUNCH(( OCFD_time_advance_ker1<<<griddim , blockdim>>>(*pf_d , *pfn_d , *pdu_d , job) ));
+			CUDA_LAUNCH(( OCFD_spec_time_advance_ker1<<<griddim , blockdim>>>(*pspec_d , *pspecn_d , *pdspec_d , job, NSPECS) ));
 			break;
 		}
 		case 2:
 		{
 			CUDA_LAUNCH(( OCFD_time_advance_ker2<<<griddim , blockdim>>>(*pf_d , *pfn_d , *pdu_d , job) ));
+			CUDA_LAUNCH(( OCFD_spec_time_advance_ker2<<<griddim , blockdim>>>(*pspec_d , *pspecn_d , *pdspec_d , job, NSPECS) ));
 			break;
 		}
 		case 3:
 		{
 			CUDA_LAUNCH(( OCFD_time_advance_ker3<<<griddim , blockdim>>>(*pf_d , *pfn_d , *pdu_d , *pf_lap_d , job) ));
+			CUDA_LAUNCH(( OCFD_spec_time_advance_ker3<<<griddim , blockdim>>>(*pspec_d , *pspecn_d , *pdspec_d , job, NSPECS) ));
 			break;
 		}
 	}

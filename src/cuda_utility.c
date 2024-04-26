@@ -123,6 +123,24 @@ void new_cudaSoA(cudaSoA **pSoA, unsigned int size_x, unsigned int size_y, unsig
     **pSoA = tmpSoA;
 }
 
+void new_cudaSoA_spec(cudaSoA **pSoA, unsigned int size_x, unsigned int size_y, unsigned int size_z)
+{
+    cudaSoA tmpSoA;
+    unsigned int pitch;
+    void *tmp_ptr;
+
+    tmp_ptr = malloc_me_d(&pitch, size_x, size_y, size_z * NSPECS);
+
+    tmpSoA.ptr = (REAL *)tmp_ptr;
+
+    pitch /= sizeof(REAL);
+    tmpSoA.pitch = pitch;
+    tmpSoA.length_Y = size_y;
+    tmpSoA.length_Z = size_z;
+
+    *pSoA = (cudaSoA *)malloc(sizeof(cudaSoA));
+    **pSoA = tmpSoA;
+}
 
 void delete_cudaSoA(cudaSoA *pSoA)
 {

@@ -116,15 +116,13 @@ extern REAL *pf,*pfn,*pdu; // [nz][ny][nx][5]
 // used in filtering
 extern REAL *pf_lap; // [nz+2*LAP][ny+2*LAP][nx+2*LAP][5]
 
-// used in invis jacobian , is part of ptmpa
-extern REAL *pfp; // [5][nz+2*LAP][ny+2*LAP][nx+2*LAP]
-extern REAL *pfm; // [5][nz+2*LAP][ny+2*LAP][nx+2*LAP]
-extern REAL *pcc; // [nz+2*LAP][ny+2*LAP][nx+2*LAP]
-// used in invis jacobian , is part of ptmpb
-extern REAL *pdfp , *pdfm; // [nz][ny][nx]
+extern REAL *pO;
+extern REAL *pO2;
+extern REAL *pN;
+extern REAL *pNO;
+extern REAL *pN2;
 
 // used in ana
-extern REAL *pQ , *pLamda2;// [nx][ny][nx]
 extern REAL *pdm, *pum, *pvm, *pwm, *pTm;//[nx][ny][nz]
 extern int average_IO;
 extern int Istep_average;

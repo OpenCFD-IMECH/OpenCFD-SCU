@@ -154,6 +154,85 @@ void read_file(
 //----------------------------------------------------------------------------------
 
 //================================================================================
+void OCFD_save_final(
+	int Iflag_av,
+	int Istep_name,
+	REAL * pd,
+	REAL * pu,
+	REAL * pv,
+	REAL * pw,
+	REAL * pT,
+	REAL *O2, 
+	REAL *N2)
+{
+							    
+	// Iflag_av==0, write opencfd file; ==1, write averaged data file
+
+	char filename1[120];
+	//-------------------------------------------
+	MPI_File tmp_file;
+	int tmp[3];
+	int size_tmp = sizeof(tmp);
+
+        if(Iflag_av == 0){
+            sprintf(filename1, "OCFD%08d.dat", Istep_name);
+		}else{
+		    sprintf(filename1, "OCFD%08d.average", Istep_name);
+		}
+        if(my_id == 0) printf("write data file: %s\n", filename1);
+	
+	MPI_File_open(MPI_COMM_WORLD, filename1, MPI_MODE_WRONLY | MPI_MODE_CREATE, MPI_INFO_NULL, &tmp_file);
+
+	if(Iflag_av == 0){
+            
+	    tmp[0] = Istep;
+        *(REAL*)(tmp + 1) = tt;
+
+	    MPI_File_write_at_all(tmp_file, 0, &size_tmp, 1, MPI_INT, &status);
+	    MPI_File_write_at_all(tmp_file, sizeof(int), tmp, 1, MPI_INT, &status);
+	    MPI_File_write_at_all(tmp_file, 2*sizeof(int), tmp+1, 1, OCFD_DATA_TYPE, &status);
+	    MPI_File_write_at_all(tmp_file, 2*sizeof(int)+sizeof(REAL), &size_tmp, 1, MPI_INT, &status);
+	}else{
+            
+	    tmp[0] = Istep_average;
+        *(REAL*)(tmp + 1) = tt_average;
+	    
+	    MPI_File_write_at_all(tmp_file, 0, &size_tmp, 1, MPI_INT, &status);
+	    MPI_File_write_at_all(tmp_file, sizeof(int), tmp, 1, MPI_INT, &status);
+	    MPI_File_write_at_all(tmp_file, 2*sizeof(int), tmp+1, 1, OCFD_DATA_TYPE, &status);
+	    MPI_File_write_at_all(tmp_file, 2*sizeof(int)+sizeof(REAL), &size_tmp, 1, MPI_INT, &status);
+	}
+
+	MPI_Offset offset = 3*sizeof(int)+sizeof(REAL);
+
+	write_3d1(tmp_file, offset, pd);
+	offset += (2*sizeof(int) + NX_GLOBAL * NY_GLOBAL * sizeof(REAL)) * NZ_GLOBAL;
+	write_3d1(tmp_file, offset, pu);
+	offset += (2*sizeof(int) + NX_GLOBAL * NY_GLOBAL * sizeof(REAL)) * NZ_GLOBAL;
+	write_3d1(tmp_file, offset, pv);
+	offset += (2*sizeof(int) + NX_GLOBAL * NY_GLOBAL * sizeof(REAL)) * NZ_GLOBAL;
+	write_3d1(tmp_file, offset, pw);
+	offset += (2*sizeof(int) + NX_GLOBAL * NY_GLOBAL * sizeof(REAL)) * NZ_GLOBAL;
+	write_3d1(tmp_file, offset, pT);
+	offset += (2*sizeof(int) + NX_GLOBAL * NY_GLOBAL * sizeof(REAL)) * NZ_GLOBAL;
+	write_3d1(tmp_file, offset, O2);
+	offset += (2*sizeof(int) + NX_GLOBAL * NY_GLOBAL * sizeof(REAL)) * NZ_GLOBAL;
+	write_3d1(tmp_file, offset, N2);
+
+    MPI_File_close(&tmp_file);
+
+	//if (my_id == 0)
+	//{
+	//	if (Iflag_av == 0)
+	//	{
+	//		printf("write data OK\n");
+	//		tmp_file = fopen("Opencfd.msg", "a");
+	//		fprintf(tmp_file, "%d", Istep_name);
+	//		fclose(tmp_file);
+	//	}
+	//}
+}
+
 void OCFD_save(
 	int Iflag_av,
 	int Istep_name,

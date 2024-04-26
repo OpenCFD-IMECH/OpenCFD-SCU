@@ -53,6 +53,31 @@ void du_invis_Jacobian3d_z(cudaJobPackage job_in, cudaSoA *fp, cudaSoA *fm, cuda
 
 }
 
+void dspec_invis_Jacobian3d_x(cudaJobPackage job_in, cudaSoA *fp, cudaSoA *fm, cudaStream_t *stream){
+
+	OCFD_dx1_spec(*fp, *pdspec_d, *pAjac_d, *pAkx_d, *pAky_d, *pAkz_d, job_in, BlockDim_X, stream, D0_bound[0], D0_bound[1]);
+
+	OCFD_dx2_spec(*fm, *pdspec_d, *pAjac_d, *pAkx_d, *pAky_d, *pAkz_d, job_in, BlockDim_X, stream, D0_bound[0], D0_bound[1]);
+
+}
+
+void dspec_invis_Jacobian3d_y(cudaJobPackage job_in, cudaSoA *fp, cudaSoA *fm, cudaStream_t *stream){
+
+	OCFD_dy1_spec(*fp, *pdspec_d, *pAjac_d, *pAix_d, *pAiy_d, *pAiz_d, job_in, BlockDim_Y, stream, D0_bound[2], D0_bound[3]);
+
+	OCFD_dy2_spec(*fm, *pdspec_d, *pAjac_d, *pAix_d, *pAiy_d, *pAiz_d, job_in, BlockDim_Y, stream, D0_bound[2], D0_bound[3]);
+
+}
+
+
+void dspec_invis_Jacobian3d_z(cudaJobPackage job_in, cudaSoA *fp, cudaSoA *fm, cudaStream_t *stream){
+
+	OCFD_dz1_spec(*fp, *pdspec_d, *pAjac_d, *pAsx_d, *pAsy_d, *pAsz_d, job_in, BlockDim_Z, stream, D0_bound[4], D0_bound[5]);
+
+	OCFD_dz2_spec(*fm, *pdspec_d, *pAjac_d, *pAsx_d, *pAsy_d, *pAsz_d, job_in, BlockDim_Z, stream, D0_bound[4], D0_bound[5]);
+
+}
+
 // ========================================================
 
 void du_viscous_Jacobian3d_init(cudaStream_t *stream){

@@ -95,40 +95,40 @@ void filtering(
 	//  --------------Filtering --------------------
 
 	if(fiter_judge_X == 1){
-		exchange_boundary_x_packed_dev(pP , pP_d, Iperiodic[0]);
+		exchange_boundary_x_packed_dev(pP_d, Iperiodic[0]);
 
 		for(int n=0;n<NVARS;n++){
 			cudaField tmp;
 			int size = pf_lap_d->pitch * ny_2lap * nz_2lap;
 			tmp.pitch = pf_lap_d->pitch;
 			tmp.ptr = pf_lap_d->ptr + n*size;
-			exchange_boundary_x_packed_dev(pP, &tmp, Iperiodic[0]);
+			exchange_boundary_x_packed_dev(&tmp, Iperiodic[0]);
 		}
 	}
 
 
 	if(fiter_judge_Y == 1){
-		exchange_boundary_y_packed_dev(pP, pP_d, Iperiodic[1]);
+		exchange_boundary_y_packed_dev(pP_d, Iperiodic[1]);
 
 		for(int n=0; n < NVARS; n++){
 			cudaField tmp;
 			int size = pf_lap_d->pitch * ny_2lap * nz_2lap;
 			tmp.pitch = pf_lap_d->pitch;
 			tmp.ptr = pf_lap_d->ptr + n*size;
-			exchange_boundary_y_packed_dev(pP, &tmp, Iperiodic[1]);
+			exchange_boundary_y_packed_dev(&tmp, Iperiodic[1]);
 		}
 	}
 
 
 	if(fiter_judge_Z == 1){
-		exchange_boundary_z_packed_dev(pP, pP_d, Iperiodic[2]);
+		exchange_boundary_z_packed_dev(pP_d, Iperiodic[2]);
 
 		for(int n=0; n < NVARS; n++){
 			cudaField tmp;
 			int size = pf_lap_d->pitch * ny_2lap * nz_2lap;
 			tmp.pitch = pf_lap_d->pitch;
 			tmp.ptr = pf_lap_d->ptr + n*size;
-			exchange_boundary_z_packed_dev(pP, &tmp, Iperiodic[2]);
+			exchange_boundary_z_packed_dev(&tmp, Iperiodic[2]);
 		}
 	}
 

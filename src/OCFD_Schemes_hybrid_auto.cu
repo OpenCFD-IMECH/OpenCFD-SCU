@@ -280,7 +280,7 @@ void Smoothing_dp(cudaStream_t *stream){
     cal_grid_block_dim(&griddim, &blockdim, BlockDimX, BlockDimY, BlockDimZ, size.x, size.y, size.z);
     CUDA_LAUNCH(( Modify_P_kernel<<<griddim, blockdim, 0, *stream>>>(*pPP_d, grad_P, P_intvs, job) ));
 
-    exchange_boundary_xyz_Async_packed_dev(pP, pPP_d, stream);
+    exchange_boundary_xyz_Async_packed_dev(pPP_d, stream);
 
     CUDA_LAUNCH(( Modify_grad_inner_kernel<<<griddim, blockdim, 0, *stream>>>(*pPP_d, grad_P, job) ))
 
@@ -477,7 +477,7 @@ void Boundary_dp(cudaStream_t *stream){
     cal_grid_block_dim(&griddim, &blockdim, BlockDimX, BlockDimY, BlockDimZ, size.x, size.y, size.z);
     CUDA_LAUNCH(( Modify_P_all_kernel<<<griddim, blockdim, 0, *stream>>>(*pPP_d, grad_P, job) ));
 
-    exchange_boundary_xyz_Async_packed_dev(pP, pPP_d, stream);
+    exchange_boundary_xyz_Async_packed_dev(pPP_d, stream);
 
     //---------------------------------------------------------------------------------------------
 	if (npx == 0 && Iperiodic[0] == 0)
