@@ -19,7 +19,7 @@ int my_id, n_processe;
 int nx, ny, nz, NZ, *NPZ, *NP, *head;
 double Re, Ama, Gamma, Pr, T_Ref, Tr, Tw, Amu, Cp, hh, tmp, Place;
 double *x3d, *y3d, *z3d;
-double *pd, *pu, *pv, *pw, *pT, *BC_rpara;
+double *pd, *pu, *pv, *pw, *pT, *BC_rpara, *pO2, *pN2;
 
 typedef struct configItem_
 {
@@ -394,6 +394,13 @@ void Data_malloc(){
 
     pT = (double*)malloc(nx * ny * NZ * sizeof(double));
     Malloc_Judge(pT);
+
+    pO2 = (double*)malloc(nx * ny * NZ * sizeof(double));
+    Malloc_Judge(pO2);
+
+    
+    pN2 = (double*)malloc(nx * ny * NZ * sizeof(double));
+    Malloc_Judge(pN2);
 }
 
 #undef Malloc_Judge
@@ -610,6 +617,24 @@ void Read_data(){
         MPI_File_read(tmp_file, pT+num*k, num,  MPI_DOUBLE, &status);
         MPI_File_read(tmp_file, &num_byte, 1,  MPI_INT, &status);
     }
+
+    if(my_id == 0) printf("READ spec1 ...\n");
+
+    for(int k = 0; k < NZ; k++){
+        MPI_File_read(tmp_file, &num_byte, 1,  MPI_INT, &status);
+        MPI_File_read(tmp_file, pO2+num*k, num,  MPI_DOUBLE, &status);
+        MPI_File_read(tmp_file, &num_byte, 1,  MPI_INT, &status);
+    }
+
+
+    if(my_id == 0) printf("READ spec2 ...\n");
+
+    for(int k = 0; k < NZ; k++){
+        MPI_File_read(tmp_file, &num_byte, 1,  MPI_INT, &status);
+        MPI_File_read(tmp_file, pN2+num*k, num,  MPI_DOUBLE, &status);
+        MPI_File_read(tmp_file, &num_byte, 1,  MPI_INT, &status);
+    }
+
     //output3d(nx, ny, nz, z3d);
     MPI_File_close(&tmp_file);
 }
@@ -2183,8 +2208,10 @@ void Write_dataxyz3d_format(){
     double (*v)[ny][nx] = (double (*)[ny][nx])(pv);
     double (*w)[ny][nx] = (double (*)[ny][nx])(pw);
     double (*T)[ny][nx] = (double (*)[ny][nx])(pT);
+    double (*spec1)[ny][nx] = (double (*)[ny][nx])(pO2);
+    double (*spec2)[ny][nx] = (double (*)[ny][nx])(pN2);
 
-    double *x3d_buff, *y3d_buff, *z3d_buff, *pd_buff, *pu_buff, *pv_buff, *pw_buff, *pT_buff;
+    double *x3d_buff, *y3d_buff, *z3d_buff, *pd_buff, *pu_buff, *pv_buff, *pw_buff, *pT_buff, *pspec1_buff, *pspec2_buff;
 
     if(my_id == 0) printf("Write dataxyz3d.dat\n");
     char filename[100];
@@ -2213,6 +2240,8 @@ void Write_dataxyz3d_format(){
     pv_buff  = (double*)malloc(MP[m] * ny * NZ * sizeof(double));
     pw_buff  = (double*)malloc(MP[m] * ny * NZ * sizeof(double));
     pT_buff  = (double*)malloc(MP[m] * ny * NZ * sizeof(double));
+    pspec1_buff  = (double*)malloc(MP[m] * ny * NZ * sizeof(double));
+    pspec2_buff  = (double*)malloc(MP[m] * ny * NZ * sizeof(double));
 
     double (*xx3d_buff)[ny][MP[m]] = (double(*)[ny][MP[m]])x3d_buff;
     double (*yy3d_buff)[ny][MP[m]] = (double(*)[ny][MP[m]])y3d_buff;
@@ -2222,6 +2251,8 @@ void Write_dataxyz3d_format(){
     double (*ppv_buff)[ny][MP[m]]  = (double(*)[ny][MP[m]])pv_buff;
     double (*ppw_buff)[ny][MP[m]]  = (double(*)[ny][MP[m]])pw_buff;
     double (*ppT_buff)[ny][MP[m]]  = (double(*)[ny][MP[m]])pT_buff;
+    double (*ppspec1_buff)[ny][MP[m]]  = (double(*)[ny][MP[m]])pspec1_buff;
+    double (*ppspec2_buff)[ny][MP[m]]  = (double(*)[ny][MP[m]])pspec2_buff;
 
     int tmp;
 
@@ -2237,6 +2268,8 @@ void Write_dataxyz3d_format(){
                 ppv_buff[k][j][i]  = v[k][j][tmp];
                 ppw_buff[k][j][i]  = w[k][j][tmp];
                 ppT_buff[k][j][i]  = T[k][j][tmp];
+                ppspec1_buff[k][j][i]  = spec1[k][j][tmp];
+                ppspec2_buff[k][j][i]  = spec2[k][j][tmp];
             }
         }
     }
@@ -2254,16 +2287,16 @@ void Write_dataxyz3d_format(){
         if(my_id == 0){
             fp = fopen(filename, "a");
             if(n == 0){
-                fprintf(fp, "variables=x,y,z,d,u,v,w,T\n");
+                fprintf(fp, "variables=x,y,z,d,u,v,w,T,O2, N2\n");
                 fprintf(fp, "zone i=%d ,j=%d ,k=%d\n", MP[m], ny, nz);
             }
     
             for(int k = 0; k < NPZ[n]; k++){
                 for(int j = 0; j < ny; j++){
                     for(int i = 0; i < MP[m]; i++){
-                        fprintf(fp, "%15.6f%15.6f%15.6f%15.6f%15.6f%15.6f%15.6f%15.6f\n", xx3d_buff[k][j][i],
+                        fprintf(fp, "%15.6f%15.6f%15.6f%15.6f%15.6f%15.6f%15.6f%15.6f%15.6f%15.6f\n", xx3d_buff[k][j][i],
                             yy3d_buff[k][j][i], zz3d_buff[k][j][i], ppd_buff[k][j][i], ppu_buff[k][j][i], ppv_buff[k][j][i], 
-                            ppw_buff[k][j][i], ppT_buff[k][j][i]);
+                            ppw_buff[k][j][i], ppT_buff[k][j][i], ppspec1_buff[k][j][i], ppspec2_buff[k][j][i]);
                     }
                 }
                 // for(int j = ny-2; j >= 0; j--){
@@ -2289,6 +2322,8 @@ void Write_dataxyz3d_format(){
             MPI_Send(pv_buff , MP[m]*ny*NPZ[my_id], MPI_DOUBLE, my_id-1, 1, MPI_COMM_WORLD);
             MPI_Send(pw_buff , MP[m]*ny*NPZ[my_id], MPI_DOUBLE, my_id-1, 1, MPI_COMM_WORLD);
             MPI_Send(pT_buff , MP[m]*ny*NPZ[my_id], MPI_DOUBLE, my_id-1, 1, MPI_COMM_WORLD);
+            MPI_Send(pspec1_buff , MP[m]*ny*NPZ[my_id], MPI_DOUBLE, my_id-1, 1, MPI_COMM_WORLD);
+            MPI_Send(pspec2_buff , MP[m]*ny*NPZ[my_id], MPI_DOUBLE, my_id-1, 1, MPI_COMM_WORLD);
         }
 
         if(my_id != n_processe-1){
@@ -2300,6 +2335,8 @@ void Write_dataxyz3d_format(){
             MPI_Recv(pv_buff , MP[m]*ny*NPZ[my_id+1], MPI_DOUBLE, my_id+1, 1, MPI_COMM_WORLD, &status);
             MPI_Recv(pw_buff , MP[m]*ny*NPZ[my_id+1], MPI_DOUBLE, my_id+1, 1, MPI_COMM_WORLD, &status);
             MPI_Recv(pT_buff , MP[m]*ny*NPZ[my_id+1], MPI_DOUBLE, my_id+1, 1, MPI_COMM_WORLD, &status);
+            MPI_Recv(pspec1_buff , MP[m]*ny*NPZ[my_id+1], MPI_DOUBLE, my_id+1, 1, MPI_COMM_WORLD, &status);
+            MPI_Recv(pspec2_buff , MP[m]*ny*NPZ[my_id+1], MPI_DOUBLE, my_id+1, 1, MPI_COMM_WORLD, &status);
         }
     }
 }
