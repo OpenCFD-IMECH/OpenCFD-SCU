@@ -20,6 +20,8 @@
 #include "OCFD_mpi_dev.h"
 #include "OCFD_filtering.h"
 
+#include "opencc.h"
+
 #ifdef PROFILING
 #include <cuda_profiler_api.h>
 #endif
@@ -45,6 +47,13 @@ int main(int argc, char *argv[]){
 
     init();
 
+    char *fname = "./chem_h2.yaml";
+    int size = 5;
+    double T[4] = {1,2,3,4};  
+    double P[4] = {1,2,3,4};  
+    double Y[4] = {1,2,3,4}; 
+
+    opencc_ode_init(fname, size, T, P, Y);
 #ifdef PROFILING
 cudaProfilerStart();
 #endif

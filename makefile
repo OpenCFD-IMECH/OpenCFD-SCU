@@ -112,19 +112,19 @@ OPT_Host+= $(OPT_Commen)
 OPT_Dev=-dc -I $(MPI_PATH)/include -I $(DEV_PATH)/include
 OPT_Dev+=$(OPT_Commen) -arch=compute_86
 
-
+OpenCC_PATH=/home/david/Desktop/SCU-comb/OpenCC
 
 
 opencfd.o : opencfd.c
-	$(HOST) $(OPT_Host) -I head/ -o opencfd.o opencfd.c
+	$(HOST) $(OPT_Host) -I head/ -I $(OpenCC_PATH)/include -o opencfd.o opencfd.c
 
 obj/%.o : src/%.c head/%.h
 	@if [ ! -e "obj" ] ; then mkdir obj ; fi
-	$(HOST) $(OPT_Host) -I head/ $< -o $@
+	$(HOST) $(OPT_Host) -I head/ -I $(OpenCC_PATH)/include $< -o $@
 
 obj/%.o : src/%.cu head/%.h
 	@if [ ! -e "obj" ] ; then mkdir obj ; fi
-	$(DEV) $(OPT_Dev) -I head/ $< -o $@
+	$(DEV) $(OPT_Dev) -I head/ -I $(OpenCC_PATH)/include $< -o $@
 
 
 clean:
@@ -134,7 +134,7 @@ endif
 
 
 default : opencfd.o obj/libocfd.a
-	$(DEV) -O3 -o opencfd-scu.out opencfd.o -L obj -locfd -L $(MPI_PATH)/lib -lmpi -lm -lpthread
+	$(DEV) -O3 -o opencfd-scu.out opencfd.o -L obj -locfd -L $(MPI_PATH)/lib -L$(OpenCC_PATH)/lib -lmpi -lm -lpthread -lopencc
 
 
 obj/libocfd.a : $(OBJ)

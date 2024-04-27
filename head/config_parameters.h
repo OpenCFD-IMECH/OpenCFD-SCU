@@ -33,11 +33,11 @@ typedef struct TYPE_NegT_{
     int NT_Point[NegT_Max][3];
 }TYPE_NegT;
 
-typedef struct configItem_
+typedef struct config_
 {
     char name[1000];
     char value[1000];
-} configItem;
+} config;
 
 
 int ExtarctItem(char *src, char *name, char *value);
@@ -45,7 +45,7 @@ int ItemNUM(FILE *file, char *Item_name, int *NameNUM);
 int PartItem(char *src, char part[][1000]);
 void ModifyItem(char *name, char *buff);
 void RemovalNUM(char *buff);
-void SearchItem(FILE *file, configItem *List, int configNum);
+void SearchItem(FILE *file, config *List, int configNum);
 void Schemes_Choose_ID(SCHEME_CHOOSE *scheme);
 
 #ifdef __cplusplus
