@@ -42,6 +42,10 @@ extern cudaField *pAmu_d; // viscous 3d [nz][nt][nx]
 extern cudaField *pd_d,*pu_d,*pv_d,*pw_d,*pT_d,*pP_d; //  [nz+2*LAP][ny+2*LAP][nx+2*LAP]
 extern cudaSoA *pf_d,*pfn_d,*pdu_d; // [nz][ny][nx][5]
 
+// memory space for species
+extern cudaSoA *pspec_d, *pspecn_d, *pdspec_d;
+extern cudaField *pO_d, *pO2_d, *pN_d, *pNO_d, *pN2_d;
+
 // used in filtering
 extern cudaSoA *pf_lap_d; // [nz+2*LAP][ny+2*LAP][nx+2*LAP][5]
 
@@ -62,7 +66,14 @@ extern cudaField *pcc_d; // [nz+2*LAP][ny+2*LAP][nx+2*LAP]
 // used in invis jacobian , is part of ptmpb
 extern cudaField *pdfp_d , *pdfm_d; // [nz][ny][nx]
 
+extern cudaSoA *pfpi_x_d; // [5][nz+2*LAP][ny+2*LAP][nx+2*LAP]
+extern cudaSoA *pfmi_x_d; // [5][nz+2*LAP][ny+2*LAP][nx+2*LAP]
 
+extern cudaSoA *pfpi_y_d; // [5][nz+2*LAP][ny+2*LAP][nx+2*LAP]
+extern cudaSoA *pfmi_y_d; // [5][nz+2*LAP][ny+2*LAP][nx+2*LAP]
+
+extern cudaSoA *pfpi_z_d; // [5][nz+2*LAP][ny+2*LAP][nx+2*LAP]
+extern cudaSoA *pfmi_z_d; // [5][nz+2*LAP][ny+2*LAP][nx+2*LAP]
 
 // used in vis jacobian , is part of ptmpb
 extern cudaField * pEv1_d,*pEv2_d,*pEv3_d,*pEv4_d;  // [nz+2*LAP][ny+2*LAP][nx+2*LAP]

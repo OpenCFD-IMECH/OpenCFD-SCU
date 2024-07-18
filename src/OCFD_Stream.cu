@@ -33,10 +33,13 @@ void du_comput(int KRK){
 	//	pthread_join(thread_handles[thread], NULL);
 	if(IFLAG_HybridAuto == 1 && KRK == 1) Set_Scheme_HybridAuto(&Stream[0]);
 
-	cuda_mem_value_init_warp(0.0 ,pdu_d->ptr, pdu_d->pitch, nx, ny, nz*5);
+	cuda_mem_value_init_warp(0.0 ,pdu_d->ptr, pdu_d->pitch, nx, ny, nz*NVARS);
+	cuda_mem_value_init_warp(0.0 ,pdspec_d->ptr, pdspec_d->pitch, nx, ny, nz*NSPECS);
 
 	switch(Stream_MODE){
         case 0://Non-stream
+		dspec_invis_Jacobian3d(NULL);
+
 	    du_invis_Jacobian3d(NULL);
 	    du_vis_Jacobian3d(NULL);
         break;
@@ -288,11 +291,11 @@ void* du_vis_Jacobian3d_inner_z(cudaStream_t *stream){
 
 void* du_invis_Jacobian3d(void* pthread_id){
 
-	exchange_boundary_xyz_packed_dev(pd , pd_d);
-	exchange_boundary_xyz_packed_dev(pu , pu_d);
-	exchange_boundary_xyz_packed_dev(pv , pv_d); 
-	exchange_boundary_xyz_packed_dev(pw , pw_d);
-	exchange_boundary_xyz_packed_dev(pT , pT_d);
+	exchange_boundary_xyz_packed_dev(pd_d);
+	exchange_boundary_xyz_packed_dev(pu_d);
+	exchange_boundary_xyz_packed_dev(pv_d); 
+	exchange_boundary_xyz_packed_dev(pw_d);
+	exchange_boundary_xyz_packed_dev(pT_d);
 
 	cudaJobPackage job(dim3(LAP, LAP, LAP), dim3(nx_lap, ny_lap, nz_lap));
 	du_invis_Jacobian3d_init(job, &Stream[0]);
@@ -304,31 +307,47 @@ void* du_invis_Jacobian3d(void* pthread_id){
 	return NULL;
 }
 
+
+void* dspec_invis_Jacobian3d(void* pthread_id){
+
+    exchange_spec_boundary_xyz_packed_dev(pspec_d);
+
+	cudaJobPackage job(dim3(LAP, LAP, LAP), dim3(nx_lap, ny_lap, nz_lap));
+    
+    split_spec(job, pfpi_x_d, pfmi_x_d, pfpi_y_d, pfmi_y_d, pfpi_z_d, pfmi_z_d, &Stream[0]);
+
+	dspec_invis_Jacobian3d_x(job, pfpi_x_d, pfmi_x_d, &Stream[0]);
+	dspec_invis_Jacobian3d_y(job, pfpi_y_d, pfmi_y_d, &Stream[0]);
+	dspec_invis_Jacobian3d_z(job, pfpi_z_d, pfmi_z_d, &Stream[0]);
+
+	return NULL;
+}
+
 void* du_vis_Jacobian3d(void* pthread_id){
 
 	cudaJobPackage job(dim3(LAP, LAP, LAP), dim3(nx_lap, ny_lap, nz_lap));
 	du_viscous_Jacobian3d_init(&Stream[0]);
 	
 	du_viscous_Jacobian3d_x_init(&Stream[0]);
-	exchange_boundary_x_packed_dev(pEv1 , pEv1_d , Iperiodic[0]);
-    exchange_boundary_x_packed_dev(pEv2 , pEv2_d , Iperiodic[0]);
-    exchange_boundary_x_packed_dev(pEv3 , pEv3_d , Iperiodic[0]);
-    exchange_boundary_x_packed_dev(pEv4 , pEv4_d , Iperiodic[0]);
+	exchange_boundary_x_packed_dev(pEv1_d , Iperiodic[0]);
+    exchange_boundary_x_packed_dev(pEv2_d , Iperiodic[0]);
+    exchange_boundary_x_packed_dev(pEv3_d , Iperiodic[0]);
+    exchange_boundary_x_packed_dev(pEv4_d , Iperiodic[0]);
 	du_viscous_Jacobian3d_x_final(job, &Stream[0]);
 
 	du_viscous_Jacobian3d_y_init(&Stream[0]);
-	exchange_boundary_y_packed_dev(pEv1 , pEv1_d , Iperiodic[1]);
-    exchange_boundary_y_packed_dev(pEv2 , pEv2_d , Iperiodic[1]);
-    exchange_boundary_y_packed_dev(pEv3 , pEv3_d , Iperiodic[1]);
-	exchange_boundary_y_packed_dev(pEv4 , pEv4_d , Iperiodic[1]);
+	exchange_boundary_y_packed_dev(pEv1_d , Iperiodic[1]);
+    exchange_boundary_y_packed_dev(pEv2_d , Iperiodic[1]);
+    exchange_boundary_y_packed_dev(pEv3_d , Iperiodic[1]);
+	exchange_boundary_y_packed_dev(pEv4_d , Iperiodic[1]);
 	boundary_symmetry_pole_vis_y(&Stream[0]);
 	du_viscous_Jacobian3d_y_final(job, &Stream[0]);
 
 	du_viscous_Jacobian3d_z_init(&Stream[0]);
-	exchange_boundary_z_packed_dev(pEv1 , pEv1_d ,Iperiodic[2]);
-    exchange_boundary_z_packed_dev(pEv2 , pEv2_d ,Iperiodic[2]);
-    exchange_boundary_z_packed_dev(pEv3 , pEv3_d ,Iperiodic[2]);
-    exchange_boundary_z_packed_dev(pEv4 , pEv4_d ,Iperiodic[2]);
+	exchange_boundary_z_packed_dev(pEv1_d ,Iperiodic[2]);
+    exchange_boundary_z_packed_dev(pEv2_d ,Iperiodic[2]);
+    exchange_boundary_z_packed_dev(pEv3_d ,Iperiodic[2]);
+    exchange_boundary_z_packed_dev(pEv4_d ,Iperiodic[2]);
 	du_viscous_Jacobian3d_z_final(job, &Stream[0]);
 
 	return NULL;
@@ -489,11 +508,11 @@ void* du_invis_Jacobian3d_outer_z_z(cudaStream_t *stream){
 
 void* du_invis_Jacobian3d_outer_exchange(cudaStream_t *stream){
 
-	exchange_boundary_xyz_Async_packed_dev(pd , pd_d , stream);
-	exchange_boundary_xyz_Async_packed_dev(pu , pu_d , stream);
-	exchange_boundary_xyz_Async_packed_dev(pv , pv_d , stream); 
-	exchange_boundary_xyz_Async_packed_dev(pw , pw_d , stream);
-	exchange_boundary_xyz_Async_packed_dev(pT , pT_d , stream);
+	exchange_boundary_xyz_Async_packed_dev(pd_d , stream);
+	exchange_boundary_xyz_Async_packed_dev(pu_d , stream);
+	exchange_boundary_xyz_Async_packed_dev(pv_d , stream); 
+	exchange_boundary_xyz_Async_packed_dev(pw_d , stream);
+	exchange_boundary_xyz_Async_packed_dev(pT_d , stream);
 	
 	return NULL;
 }
@@ -642,10 +661,10 @@ void* du_vis_Jacobian3d_outer_z_z(cudaStream_t *stream){
 
 void* du_vis_Jacobian3d_outer_x(cudaStream_t *stream){
 
-	exchange_boundary_x_Async_packed_dev(pEv1 , pEv1_d , Iperiodic[0], stream);
-    exchange_boundary_x_Async_packed_dev(pEv2 , pEv2_d , Iperiodic[0], stream);
-    exchange_boundary_x_Async_packed_dev(pEv3 , pEv3_d , Iperiodic[0], stream);
-    exchange_boundary_x_Async_packed_dev(pEv4 , pEv4_d , Iperiodic[0], stream);
+	exchange_boundary_x_Async_packed_dev(pEv1_d , Iperiodic[0], stream);
+    exchange_boundary_x_Async_packed_dev(pEv2_d , Iperiodic[0], stream);
+    exchange_boundary_x_Async_packed_dev(pEv3_d , Iperiodic[0], stream);
+    exchange_boundary_x_Async_packed_dev(pEv4_d , Iperiodic[0], stream);
 
 	du_vis_Jacobian3d_outer_x_x(stream);
 	du_vis_Jacobian3d_outer_x_y(stream);
@@ -656,10 +675,10 @@ void* du_vis_Jacobian3d_outer_x(cudaStream_t *stream){
 
 void* du_vis_Jacobian3d_outer_y(cudaStream_t *stream){
 
-	exchange_boundary_y_Async_packed_dev(pEv1 , pEv1_d , Iperiodic[1], stream);
-    exchange_boundary_y_Async_packed_dev(pEv2 , pEv2_d , Iperiodic[1], stream);
-    exchange_boundary_y_Async_packed_dev(pEv3 , pEv3_d , Iperiodic[1], stream);
-	exchange_boundary_y_Async_packed_dev(pEv4 , pEv4_d , Iperiodic[1], stream);
+	exchange_boundary_y_Async_packed_dev(pEv1_d , Iperiodic[1], stream);
+    exchange_boundary_y_Async_packed_dev(pEv2_d , Iperiodic[1], stream);
+    exchange_boundary_y_Async_packed_dev(pEv3_d , Iperiodic[1], stream);
+	exchange_boundary_y_Async_packed_dev(pEv4_d , Iperiodic[1], stream);
 	
 	boundary_symmetry_pole_vis_y(stream);
 
@@ -672,10 +691,10 @@ void* du_vis_Jacobian3d_outer_y(cudaStream_t *stream){
 
 void* du_vis_Jacobian3d_outer_z(cudaStream_t *stream){
 
-	exchange_boundary_z_Async_packed_dev(pEv1 , pEv1_d , Iperiodic[2], stream);
-    exchange_boundary_z_Async_packed_dev(pEv2 , pEv2_d , Iperiodic[2], stream);
-    exchange_boundary_z_Async_packed_dev(pEv3 , pEv3_d , Iperiodic[2], stream);
-    exchange_boundary_z_Async_packed_dev(pEv4 , pEv4_d , Iperiodic[2], stream);
+	exchange_boundary_z_Async_packed_dev(pEv1_d , Iperiodic[2], stream);
+    exchange_boundary_z_Async_packed_dev(pEv2_d , Iperiodic[2], stream);
+    exchange_boundary_z_Async_packed_dev(pEv3_d , Iperiodic[2], stream);
+    exchange_boundary_z_Async_packed_dev(pEv4_d , Iperiodic[2], stream);
 
 	du_vis_Jacobian3d_outer_z_x(stream);
 	du_vis_Jacobian3d_outer_z_y(stream);

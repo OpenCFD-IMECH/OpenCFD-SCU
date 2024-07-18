@@ -14,6 +14,10 @@ void du_invis_Jacobian3d_x(cudaJobPackage job_in, cudaSoA *fp, cudaSoA *fm, cuda
 void du_invis_Jacobian3d_y(cudaJobPackage job_in, cudaSoA *fp, cudaSoA *fm, cudaStream_t *stream);
 void du_invis_Jacobian3d_z(cudaJobPackage job_in, cudaSoA *fp, cudaSoA *fm, cudaStream_t *stream);
 
+void dspec_invis_Jacobian3d_x(cudaJobPackage job_in, cudaSoA *fp, cudaSoA *fm, cudaStream_t *stream);
+void dspec_invis_Jacobian3d_y(cudaJobPackage job_in, cudaSoA *fp, cudaSoA *fm, cudaStream_t *stream);
+void dspec_invis_Jacobian3d_z(cudaJobPackage job_in, cudaSoA *fp, cudaSoA *fm, cudaStream_t *stream);
+void show();
 
 void du_viscous_Jacobian3d_init(cudaStream_t *stream);
 

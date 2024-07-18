@@ -1,0 +1,240 @@
+generator: ck2yaml
+input-files: [chem_h2.inp, therm_h2.dat]
+cantera-version: 3.0.0
+date: Mon, 09 Oct 2023 10:44:00 +0800
+
+units: {length: cm, time: s, quantity: mol, activation-energy: cal/mol}
+
+phases:
+- name: gas
+  thermo: ideal-gas
+  elements: [H, O, C, N, Ar]
+  species: [H2, H, O2, O, OH, HO2, H2O2, H2O, AR, N2]
+  kinetics: gas
+  state: {T: 300.0, P: 1 atm}
+
+species:
+- name: H2
+  composition: {H: 2}
+  thermo:
+    model: NASA7
+    temperature-ranges: [200.0, 1000.0, 5000.0]
+    data:
+    - [3.298124, 8.249442e-04, -8.143015e-07, -9.475434e-11, 4.134872e-13,
+      -1012.521, -3.294094]
+    - [2.991423, 7.000644e-04, -5.633829e-08, -9.231578e-12, 1.582752e-15,
+      -835.034, -1.35511]
+    note: '121286'
+- name: H
+  composition: {H: 1}
+  thermo:
+    model: NASA7
+    temperature-ranges: [200.0, 5000.0]
+    data:
+    - [2.5, 0.0, 0.0, 0.0, 0.0, 2.547163e+04, -0.4601176]
+    note: '120186'
+- name: O2
+  composition: {O: 2}
+  thermo:
+    model: NASA7
+    temperature-ranges: [200.0, 1000.0, 5000.0]
+    data:
+    - [3.212936, 1.127486e-03, -5.75615e-07, 1.313877e-09, -8.768554e-13,
+      -1005.249, 6.034738]
+    - [3.697578, 6.135197e-04, -1.258842e-07, 1.775281e-11, -1.136435e-15,
+      -1233.93, 3.189166]
+    note: '121386'
+- name: O
+  composition: {O: 1}
+  thermo:
+    model: NASA7
+    temperature-ranges: [200.0, 1000.0, 5000.0]
+    data:
+    - [2.946429, -1.638166e-03, 2.421032e-06, -1.602843e-09, 3.890696e-13,
+      2.914764e+04, 2.963995]
+    - [2.54206, -2.755062e-05, -3.102803e-09, 4.551067e-12, -4.368052e-16,
+      2.92308e+04, 4.920308]
+    note: '120186'
+- name: OH
+  composition: {O: 1, H: 1}
+  thermo:
+    model: NASA7
+    temperature-ranges: [200.0, 1000.0, 5000.0]
+    data:
+    - [3.637266, 1.85091e-04, -1.676165e-06, 2.387203e-09, -8.431442e-13,
+      3606.782, 1.35886]
+    - [2.88273, 1.013974e-03, -2.276877e-07, 2.174684e-11, -5.126305e-16,
+      3886.888, 5.595712]
+    note: '121286'
+- name: HO2
+  composition: {H: 1, O: 2}
+  thermo:
+    model: NASA7
+    temperature-ranges: [200.0, 1000.0, 5000.0]
+    data:
+    - [2.979963, 4.996697e-03, -3.790997e-06, 2.354192e-09, -8.089024e-13,
+      176.2274, 9.222724]
+    - [4.072191, 2.131296e-03, -5.308145e-07, 6.112269e-11, -2.841165e-15,
+      -157.9727, 3.476029]
+    note: '20387'
+- name: H2O2
+  composition: {H: 2, O: 2}
+  thermo:
+    model: NASA7
+    temperature-ranges: [200.0, 1000.0, 5000.0]
+    data:
+    - [3.388754, 6.569226e-03, -1.485013e-07, -4.625806e-09, 2.471515e-12,
+      -1.766315e+04, 6.785363]
+    - [4.573167, 4.336136e-03, -1.474689e-06, 2.348904e-10, -1.431654e-14,
+      -1.800696e+04, 0.501137]
+    note: '120186'
+- name: H2O
+  composition: {H: 2, O: 1}
+  thermo:
+    model: NASA7
+    temperature-ranges: [200.0, 1000.0, 5000.0]
+    data:
+    - [3.386842, 3.474982e-03, -6.354696e-06, 6.968581e-09, -2.506588e-12,
+      -3.020811e+04, 2.590233]
+    - [2.672146, 3.056293e-03, -8.73026e-07, 1.200996e-10, -6.391618e-15,
+      -2.989921e+04, 6.862817]
+    note: '20387'
+- name: AR
+  composition: {Ar: 1}
+  thermo:
+    model: NASA7
+    temperature-ranges: [200.0, 5000.0]
+    data:
+    - [2.5, 0.0, 0.0, 0.0, 0.0, -745.375, 4.366001]
+    note: '120186'
+- name: N2
+  composition: {N: 2}
+  thermo:
+    model: NASA7
+    temperature-ranges: [200.0, 1000.0, 5000.0]
+    data:
+    - [3.298677, 1.40824e-03, -3.963222e-06, 5.641515e-09, -2.444855e-12,
+      -1020.9, 3.950372]
+    - [2.92664, 1.487977e-03, -5.684761e-07, 1.009704e-10, -6.753351e-15,
+      -922.7977, 5.980528]
+    note: '121286'
+
+reactions:
+- equation: OH + H2 <=> H + H2O  # Reaction 1
+  rate-constant: {A: 2.14e+08, b: 1.52, Ea: 3449.0}
+  note: MARINOV 1995A
+- equation: O + OH <=> O2 + H  # Reaction 2
+  rate-constant: {A: 2.02e+14, b: -0.4, Ea: 0.0}
+  note: MARINOV 1995A
+- equation: O + H2 <=> OH + H  # Reaction 3
+  rate-constant: {A: 5.06e+04, b: 2.67, Ea: 6290.0}
+  note: MARINOV 1995A
+- equation: H + O2 (+M) <=> HO2 (+M)  # Reaction 4
+  type: falloff
+  low-P-rate-constant: {A: 1.05e+19, b: -1.257, Ea: 0.0}
+  high-P-rate-constant: {A: 4.52e+13, b: 0.0, Ea: 0.0}
+  efficiencies: {H2O: 0.0, H2: 0.0, N2: 0.0}
+  note: MARINOV 1995A
+- equation: H + O2 (+M) <=> HO2 (+M)  # Reaction 5
+  type: falloff
+  low-P-rate-constant: {A: 2.03e+20, b: -1.59, Ea: 0.0}
+  high-P-rate-constant: {A: 4.52e+13, b: 0.0, Ea: 0.0}
+  efficiencies: {H2: 0.0, H: 0.0, O2: 0.0, O: 0.0, OH: 0.0, HO2: 0.0, H2O2: 0.0, H2O: 0.0, AR: 0.0}
+  note: |
+    MARINOV 1995A
+    MARINOV 1995A
+- equation: H + O2 (+M) <=> HO2 (+M)  # Reaction 6
+  type: falloff
+  low-P-rate-constant: {A: 1.52e+19, b: -1.133, Ea: 0.0}
+  high-P-rate-constant: {A: 4.52e+13, b: 0.0, Ea: 0.0}
+  efficiencies: {H2: 1.0, H: 0.0, O2: 0.0, O: 0.0, OH: 0.0, HO2: 0.0, H2O2: 0.0, H2O: 0.0, AR: 0.0, N2: 0.0}
+  note: |-
+    MARINOV 1995A
+    MARINOV 1995A
+- equation: H + O2 (+M) <=> HO2 (+M)  # Reaction 7
+  type: falloff
+  low-P-rate-constant: {A: 2.1e+23, b: -2.437, Ea: 0.0}
+  high-P-rate-constant: {A: 4.52e+13, b: 0.0, Ea: 0.0}
+  efficiencies: {H2: 0.0, H: 0.0, O2: 0.0, O: 0.0, OH: 0.0, HO2: 0.0, H2O2: 0.0, H2O: 1.0, AR: 0.0, N2: 0.0}
+
+  note: |-
+    MARINOV 1995A
+    MARINOV 1995A
+- equation: OH + HO2 <=> H2O + O2  # Reaction 8
+  duplicate: true
+  rate-constant: {A: 2.13e+28, b: -4.827, Ea: 3500.0}
+  note: |-
+    MARINOV 1995A
+    HIPPLER 1995
+- equation: OH + HO2 <=> H2O + O2  # Reaction 9
+  duplicate: true
+  rate-constant: {A: 9.1e+14, b: 0.0, Ea: 1.0964e+04}
+  note: HIPPLER 1995
+- equation: H + HO2 <=> 2 OH  # Reaction 10
+  rate-constant: {A: 1.5e+14, b: 0.0, Ea: 1000.0}
+  note: MARINOV 1995A
+- equation: H + HO2 <=> H2 + O2  # Reaction 11
+  rate-constant: {A: 8.45e+11, b: 0.65, Ea: 1241.0}
+  note: MARINOV 1995A
+- equation: H + HO2 <=> O + H2O  # Reaction 12
+  rate-constant: {A: 3.01e+13, b: 0.0, Ea: 1721.0}
+  note: MARINOV 1995A
+- equation: O + HO2 <=> O2 + OH  # Reaction 13
+  rate-constant: {A: 3.25e+13, b: 0.0, Ea: 0.0}
+  note: MARINOV 1995A
+- equation: 2 OH <=> O + H2O  # Reaction 14
+  rate-constant: {A: 3.57e+04, b: 2.4, Ea: -2112.0}
+  note: MARINOV 1995A
+- equation: 2 H (+M) <=> H2 (+M)  # Reaction 15
+  type: three-body
+  rate-constant: {A: 1.0e+18, b: -1.0, Ea: 0.0}
+  efficiencies: {H2O: 0.0, H2: 0.0}
+  note: MARINOV 1995A
+- equation: 2 H + H2 <=> 2 H2  # Reaction 16
+  rate-constant: {A: 9.2e+16, b: -0.6, Ea: 0.0}
+  note: MARINOV 1995A
+- equation: 2 H + H2O <=> H2 + H2O  # Reaction 17
+  rate-constant: {A: 6.0e+19, b: -1.25, Ea: 0.0}
+  note: MARINOV 1995A
+- equation: H + OH (+M) <=> H2O (+M)  # Reaction 18
+  type: three-body
+  rate-constant: {A: 2.21e+22, b: -2.0, Ea: 0.0}
+  efficiencies: {H2O: 6.4}
+  note: MARINOV 1995A
+- equation: H + O (+M) <=> OH (+M)  # Reaction 19
+  type: three-body
+  rate-constant: {A: 4.71e+18, b: -1.0, Ea: 0.0}
+  efficiencies: {H2O: 6.4}
+  note: MARINOV 1995A
+- equation: 2 O (+M) <=> O2 (+M)  # Reaction 20
+  type: three-body
+  rate-constant: {A: 1.89e+13, b: 0.0, Ea: -1788.0}
+  note: MARINOV 1995A
+- equation: 2 HO2 <=> H2O2 + O2  # Reaction 21
+  duplicate: true
+  rate-constant: {A: 4.2e+14, b: 0.0, Ea: 1.1982e+04}
+  note: MARINOV 1995A
+- equation: 2 HO2 <=> H2O2 + O2  # Reaction 22
+  duplicate: true
+  rate-constant: {A: 1.3e+11, b: 0.0, Ea: -1629.0}
+  note: MARINOV 1995A
+- equation: 2 OH (+M) <=> H2O2 (+M)  # Reaction 23
+  type: falloff
+  low-P-rate-constant: {A: 3.04e+30, b: -4.63, Ea: 2049.0}
+  high-P-rate-constant: {A: 1.24e+14, b: -0.37, Ea: 0.0}
+  Troe: {A: 0.47, T3: 100.0, T1: 2000.0, T2: 1.0e+15}
+  note: MARINOV 1995A
+- equation: H2O2 + H <=> HO2 + H2  # Reaction 24
+  rate-constant: {A: 1.98e+06, b: 2.0, Ea: 2435.0}
+  note: |-
+    MARINOV 1995A
+    MARINOV 1995A
+- equation: H2O2 + H <=> OH + H2O  # Reaction 25
+  rate-constant: {A: 3.07e+13, b: 0.0, Ea: 4217.0}
+  note: MARINOV 1995A
+- equation: H2O2 + O <=> OH + HO2  # Reaction 26
+  rate-constant: {A: 9.55e+06, b: 2.0, Ea: 3970.0}
+  note: MARINOV 1995A
+- equation: H2O2 + OH <=> H2O + HO2  # Reaction 27
+  rate-constant: {A: 2.4, b: 4.042, Ea: -2162.0}
+  note: MARINOV 1995A

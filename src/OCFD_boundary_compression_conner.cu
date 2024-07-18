@@ -24,7 +24,7 @@ extern REAL *fait;
 extern REAL *TM;
 
 
-__global__ void do_ub1_inlet_kernel(cudaField d, cudaField u, cudaField v, cudaField w, cudaField T, cudaField ub1, cudaJobPackage job){
+__global__ void do_ub1_inlet_kernel(cudaSoA spec, cudaField d, cudaField u, cudaField v, cudaField w, cudaField T, cudaField ub1, cudaJobPackage job){
     unsigned int y = blockDim.y * blockIdx.y + threadIdx.y + job.start.y;
     unsigned int z = blockDim.z * blockIdx.z + threadIdx.z + job.start.z;
 
@@ -36,12 +36,17 @@ __global__ void do_ub1_inlet_kernel(cudaField d, cudaField u, cudaField v, cudaF
             get_Field_LAP(v, i, y, z) = *(ub1.ptr + ylap + ub1.pitch * 2);
             get_Field_LAP(w, i, y, z) = 0.;
             get_Field_LAP(T, i, y, z) = *(ub1.ptr + ylap + ub1.pitch * 3);
+            get_SoA_LAP(spec, i, y, z, 0) = 0.0 * get_Field_LAP(d, i, y, z);
+            get_SoA_LAP(spec, i, y, z, 1) = 0.23 * get_Field_LAP(d, i, y, z);
+            get_SoA_LAP(spec, i, y, z, 2) = 0.0 * get_Field_LAP(d, i, y, z);
+            get_SoA_LAP(spec, i, y, z, 3) = 0.0 * get_Field_LAP(d, i, y, z);
+            get_SoA_LAP(spec, i, y, z, 4) = 0.77 * get_Field_LAP(d, i, y, z);
         }
     }
 }
 
 
-__global__ void do_ub1_top_kernel(cudaField d, cudaField u, cudaField v, cudaField w, cudaField T, cudaField ub1, cudaJobPackage job){
+__global__ void do_ub1_top_kernel(cudaSoA spec, cudaField d, cudaField u, cudaField v, cudaField w, cudaField T, cudaField ub1, cudaJobPackage job){
     unsigned int x = blockDim.x * blockIdx.x + threadIdx.x + job.start.x;
     unsigned int z = blockDim.z * blockIdx.z + threadIdx.z + job.start.z;
 
@@ -52,6 +57,11 @@ __global__ void do_ub1_top_kernel(cudaField d, cudaField u, cudaField v, cudaFie
         get_Field_LAP(w, x, ny_lap_d - 1, z) = 0.;
         get_Field_LAP(T, x, ny_lap_d - 1, z) = *(ub1.ptr + ub1.pitch * 3 + ny_d - 1);
 
+        // get_SoA_LAP(spec, x, ny_lap_d - 1, z, 0) = 0.0;
+        // get_SoA_LAP(spec, x, ny_lap_d - 1, z, 1) = 0.23;
+        // get_SoA_LAP(spec, x, ny_lap_d - 1, z, 2) = 0.0;
+        // get_SoA_LAP(spec, x, ny_lap_d - 1, z, 3) = 0.0;
+        // get_SoA_LAP(spec, x, ny_lap_d - 1, z, 4) = 0.77;
     }
 }
 
@@ -73,7 +83,7 @@ REAL HT, REAL epsl, cudaField fx, cudaField gz, cudaJobPackage job){
 }
 
 
-__global__ void do_wall_Tp1_kernel(cudaField d, cudaField T, cudaField u, cudaField v, cudaField w, REAL tw, cudaJobPackage job){
+__global__ void do_wall_Tp1_kernel(cudaSoA spec, cudaField d, cudaField T, cudaField u, cudaField v, cudaField w, REAL tw, cudaJobPackage job){
     unsigned int x = blockDim.x * blockIdx.x + threadIdx.x + job.start.x;
     unsigned int z = blockDim.z * blockIdx.z + threadIdx.z + job.start.z;
     REAL pw;
@@ -87,6 +97,11 @@ __global__ void do_wall_Tp1_kernel(cudaField d, cudaField T, cudaField u, cudaFi
         get_Field_LAP(T, x, LAP, z) = tw;
         get_Field_LAP(d, x, LAP, z) = pw / get_Field_LAP(T, x, LAP, z);
 
+        get_SoA_LAP(spec, x, LAP, z, 0) = 0.0 * get_Field_LAP(d, x, LAP, z);
+        get_SoA_LAP(spec, x, LAP, z, 1) = 0.23 *get_Field_LAP(d, x, LAP, z);
+        get_SoA_LAP(spec, x, LAP, z, 2) = 0.0 * get_Field_LAP(d, x, LAP, z);
+        get_SoA_LAP(spec, x, LAP, z, 3) = 0.0 * get_Field_LAP(d, x, LAP, z);
+        get_SoA_LAP(spec, x, LAP, z, 4) = 0.77 *get_Field_LAP(d, x, LAP, z);
 
         for(int i = 0; i < LAP; i++){
             get_Field_LAP(d, x, i, z) =  get_Field_LAP(d, x, 2*LAP-i, z);
@@ -94,6 +109,9 @@ __global__ void do_wall_Tp1_kernel(cudaField d, cudaField T, cudaField u, cudaFi
             get_Field_LAP(v, x, i, z) = -get_Field_LAP(v, x, 2*LAP-i, z);
             get_Field_LAP(w, x, i, z) = -get_Field_LAP(w, x, 2*LAP-i, z);
             get_Field_LAP(T, x, i, z) =  get_Field_LAP(T, x, 2*LAP-i, z);
+            for (int n=0; n<NSPECS; ++n) {
+                get_SoA_LAP(spec, x, i, z, n) = get_SoA_LAP(spec, x, 2*LAP-i, z, n);
+            }
         }
         
     }
@@ -126,7 +144,7 @@ void bc_user_Compression_conner(){
         dim3 blockdim , griddim;
         cal_grid_block_dim(&griddim, &blockdim, 1, BlockDimY, BlockDimZ, 1, ny, nz);
         cudaJobPackage job( dim3(LAP, LAP ,LAP) , dim3(LAP+1, ny_lap, nz_lap) );
-        CUDA_LAUNCH(( do_ub1_inlet_kernel<<<griddim, blockdim>>>(*pd_d, *pu_d, *pv_d, *pw_d, *pT_d, *pub1_d, job) ));
+        CUDA_LAUNCH(( do_ub1_inlet_kernel<<<griddim, blockdim>>>(*pspec_d, *pd_d, *pu_d, *pv_d, *pw_d, *pT_d, *pub1_d, job) ));
    
     }
 
@@ -136,7 +154,7 @@ void bc_user_Compression_conner(){
         cal_grid_block_dim(&griddim, &blockdim, BlockDimX, 1, BlockDimZ, x_do, 1, nz);
         cudaJobPackage job( dim3(x_begin + LAP, LAP, LAP) , dim3(nx_lap, LAP+1, nz_lap) );
         //cudaJobPackage job( dim3(LAP, LAP, LAP) , dim3(nx_lap, LAP+1, nz_lap) );
-        CUDA_LAUNCH(( do_ub1_top_kernel<<<griddim, blockdim>>>(*pd_d, *pu_d, *pv_d, *pw_d, *pT_d, *pub1_d, job) ));
+        CUDA_LAUNCH(( do_ub1_top_kernel<<<griddim, blockdim>>>(*pspec_d, *pd_d, *pu_d, *pv_d, *pw_d, *pT_d, *pub1_d, job) ));
     }
     
     REAL ht = 0.;
@@ -165,7 +183,7 @@ void bc_user_Compression_conner(){
             dim3 blockdim , griddim;
                 cal_grid_block_dim(&griddim, &blockdim, BlockDimX, 1, BlockDimZ, nx, 1, nz);
                 cudaJobPackage job( dim3(LAP, LAP, LAP) , dim3(nx_lap, LAP+1, nz_lap) );
-                CUDA_LAUNCH(( do_wall_Tp1_kernel<<<griddim, blockdim>>>(*pd_d, *pT_d, *pu_d, *pv_d, *pw_d, TW, job) ));
+                CUDA_LAUNCH(( do_wall_Tp1_kernel<<<griddim, blockdim>>>(*pspec_d, *pd_d, *pT_d, *pu_d, *pv_d, *pw_d, TW, job) ));
             }else{
             dim3 blockdim , griddim;
                 cal_grid_block_dim(&griddim, &blockdim, BlockDimX, 1, BlockDimZ, nx, 1, nz);

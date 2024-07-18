@@ -763,6 +763,390 @@ void OCFD_dz2(cudaSoA pf, cudaSoA pdu, cudaField Ajac, cudaField u, cudaField v,
 	}
 }
 
+// Used in inviscous Jacobian flux+ ------------------------------------------------------------------------------------------
+void OCFD_dx1_spec(cudaSoA pf, cudaSoA pdu, cudaField Ajac, cudaField Ax, cudaField Ay, cudaField Az, cudaJobPackage job_in, dim3 blockdim_in, cudaStream_t *stream, int boundl, int boundr){
+// field with LAPs
+	dim3 size;
+	jobsize(&job_in, &size);
+	dim3 griddim, blockdim;
+	cal_grid_block_dim(&griddim, &blockdim, blockdim_in.x-1, blockdim_in.y, blockdim_in.z, size.x, size.y, size.z );
+
+	dim3 flagxyzb(1, 0, Non_ref[0]);//.x正向边界；.y负向边界；.z无反射边界
+    OCFD_bound_non_ref(&flagxyzb, Non_ref[0], job_in);
+	OCFD_bound(&flagxyzb, boundl, boundr, job_in);
+
+	job_in.start.x  -= 1;
+    blockdim.x += 1;
+
+	for(int i=0; i<NSPECS; i++){
+		switch(Scheme_invis_ID){
+			case 301:
+			CUDA_LAUNCH((OCFD_UP7_P_kernel<<<griddim, blockdim, 0, *stream>>>(i, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 302:
+			CUDA_LAUNCH((OCFD_weno5_P_kernel<<<griddim, blockdim, 0, *stream>>>(i, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 303:
+			CUDA_LAUNCH((OCFD_weno7_P_kernel<<<griddim, blockdim, 0, *stream>>>(i, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 304:
+			CUDA_LAUNCH((OCFD_weno7_SYMBO_P_kernel<<<griddim, blockdim, 0, *stream>>>(i, 0, flagxyzb, pf, pdu, Ajac, job_in) ));//weno7_symbo
+			break;
+
+			case 305:
+			CUDA_LAUNCH(( OCFD_weno7_SYMBO_P_kernel<<<griddim, blockdim, 0, *stream>>>(i, 1, flagxyzb, pf, pdu, Ajac, job_in) ));//weno7_symbo_limiter
+			break;
+
+			case 306:
+			CUDA_LAUNCH((OCFD_NND2_P_kernel<<<griddim, blockdim, 0, *stream>>>(i, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 307:
+			CUDA_LAUNCH((OCFD_OMP6_P_kernel<<<griddim, blockdim, 0, *stream>>>(i, 0, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 308:
+			CUDA_LAUNCH((OCFD_OMP6_P_kernel<<<griddim, blockdim, 0, *stream>>>(i, 1, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 309:
+			CUDA_LAUNCH((OCFD_OMP6_P_kernel<<<griddim, blockdim, 0, *stream>>>(i, 2, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 310:
+			if(HybridAuto.Style == 1){
+				CUDA_LAUNCH((OCFD_HybridAuto_P_kernel<<<griddim, blockdim, 0, *stream>>>(i, flagxyzb, pf, pdu, Ajac, *HybridAuto.scheme_x, job_in) ));
+			}else if(HybridAuto.Style == 2){
+				CUDA_LAUNCH((OCFD_HybridAuto_P_Jameson_kernel<<<griddim, blockdim, 0, *stream>>>(i, flagxyzb, pf, pdu, Ajac, *HybridAuto.scheme_x, job_in) ));
+			}
+			break;
+		}
+	}
+}
+
+
+void OCFD_dy1_spec(cudaSoA pf, cudaSoA pdu, cudaField Ajac, cudaField Ax, cudaField Ay, cudaField Az, cudaJobPackage job_in, dim3 blockdim_in, cudaStream_t *stream, int boundl, int boundr){
+
+	dim3 size;
+	jobsize(&job_in, &size);
+	dim3 griddim, blockdim;
+	cal_grid_block_dim(&griddim, &blockdim, 8, 7, 4, size.x, size.y, size.z);
+
+	dim3 flagxyzb(2, 0, Non_ref[2]);
+    OCFD_bound_non_ref(&flagxyzb, Non_ref[2], job_in);
+	OCFD_bound(&flagxyzb, boundl, boundr, job_in);
+
+    job_in.start.y  -= 1;
+    blockdim.y += 1;
+
+	for(int i=0; i<NSPECS; i++){
+		switch(Scheme_invis_ID){
+			case 301:
+			CUDA_LAUNCH((OCFD_UP7_P_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 302:
+			CUDA_LAUNCH((OCFD_weno5_P_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 303:
+			CUDA_LAUNCH((OCFD_weno7_P_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 304:
+			CUDA_LAUNCH((OCFD_weno7_SYMBO_P_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, 0, flagxyzb, pf, pdu, Ajac, job_in) ));//weno7_symbo
+			break;
+
+			case 305:
+			CUDA_LAUNCH(( OCFD_weno7_SYMBO_P_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, 1, flagxyzb, pf, pdu, Ajac, job_in) ));//weno7_symbo_limiter
+			break;
+
+			case 306:
+			CUDA_LAUNCH((OCFD_NND2_P_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 307:
+			CUDA_LAUNCH((OCFD_OMP6_P_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, 0, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 308:
+			CUDA_LAUNCH((OCFD_OMP6_P_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, 1, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 309:
+			CUDA_LAUNCH((OCFD_OMP6_P_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, 2, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 310:
+			if(HybridAuto.Style == 1){
+				CUDA_LAUNCH((OCFD_HybridAuto_P_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, flagxyzb, pf, pdu, Ajac, *HybridAuto.scheme_y, job_in) ));
+			}else if(HybridAuto.Style == 2){
+				CUDA_LAUNCH((OCFD_HybridAuto_P_Jameson_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, flagxyzb, pf, pdu, Ajac, *HybridAuto.scheme_y, job_in) ));
+			}
+			break;
+		}
+	}
+}
+
+
+// Used in inviscous Jacobian flux- ------------------------------------------------------------------------------------------
+void OCFD_dz1_spec(cudaSoA pf, cudaSoA pdu, cudaField Ajac, cudaField Ax, cudaField Ay, cudaField Az, cudaJobPackage job_in, dim3 blockdim_in, cudaStream_t *stream, int boundl, int boundr){
+	dim3 size;
+	jobsize(&job_in, &size);
+	dim3 griddim, blockdim;
+	cal_grid_block_dim(&griddim, &blockdim, 8, 7, 4, size.x, size.z, size.y);
+
+	dim3 flagxyzb(3, 0, Non_ref[4]);
+    OCFD_bound_non_ref(&flagxyzb, Non_ref[4], job_in);
+	OCFD_bound(&flagxyzb, boundl, boundr, job_in);
+
+    job_in.start.z  -= 1;
+    blockdim.y += 1;
+
+	for(int i=0; i<NSPECS; i++){
+		switch(Scheme_invis_ID){
+			case 301:
+			CUDA_LAUNCH((OCFD_UP7_P_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 302:
+			CUDA_LAUNCH((OCFD_weno5_P_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, flagxyzb, pf, pdu, Ajac, job_in) ));//weno7_symbo
+			break;
+
+			case 303:
+			CUDA_LAUNCH((OCFD_weno7_P_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, flagxyzb, pf, pdu, Ajac, job_in) ));//weno7_symbo
+			break;
+
+			case 304:
+			CUDA_LAUNCH((OCFD_weno7_SYMBO_P_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, 0, flagxyzb, pf, pdu, Ajac, job_in) ));//weno7_symbo
+			break;
+
+			case 305:
+			CUDA_LAUNCH(( OCFD_weno7_SYMBO_P_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, 1, flagxyzb, pf, pdu, Ajac, job_in) ));//weno7_symbo_limiter
+			break;
+
+			case 306:
+			CUDA_LAUNCH((OCFD_NND2_P_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 307:
+			CUDA_LAUNCH((OCFD_OMP6_P_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, 0, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 308:
+			CUDA_LAUNCH((OCFD_OMP6_P_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, 1, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 309:
+			CUDA_LAUNCH((OCFD_OMP6_P_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, 2, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 310:
+			if(HybridAuto.Style == 1){
+				CUDA_LAUNCH((OCFD_HybridAuto_P_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, flagxyzb, pf, pdu, Ajac, *HybridAuto.scheme_z, job_in) ));
+			}else if(HybridAuto.Style == 2){
+				CUDA_LAUNCH((OCFD_HybridAuto_P_Jameson_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, flagxyzb, pf, pdu, Ajac, *HybridAuto.scheme_z, job_in) ));
+			}
+			break;
+		}
+	}
+}
+
+
+void OCFD_dx2_spec(cudaSoA pf, cudaSoA pdu, cudaField Ajac, cudaField Ax, cudaField Ay, cudaField Az, cudaJobPackage job_in, dim3 blockdim_in, cudaStream_t *stream, int boundl, int boundr){
+// field with LAPs
+		
+	dim3 size;
+	jobsize(&job_in, &size);
+	dim3 griddim, blockdim;
+	cal_grid_block_dim(&griddim, &blockdim, blockdim_in.x-1, blockdim_in.y, blockdim_in.z, size.x, size.y, size.z );
+
+	dim3 flagxyzb(4, 0, Non_ref[1]);
+    OCFD_bound_non_ref(&flagxyzb, Non_ref[1], job_in);
+	OCFD_bound(&flagxyzb, boundl, boundr, job_in);
+
+	job_in.end.x  += 1;
+    blockdim.x += 1;
+
+	for(int i=0; i<NSPECS; i++){
+		switch(Scheme_invis_ID){
+	    	case 301:
+	    	CUDA_LAUNCH((OCFD_UP7_M_kernel<<<griddim, blockdim, 0, *stream>>>(i, flagxyzb, pf, pdu, Ajac, job_in) ));
+	    	break;
+
+	    	case 302:
+	    	CUDA_LAUNCH((OCFD_weno5_M_kernel<<<griddim, blockdim, 0, *stream>>>(i, flagxyzb, pf, pdu, Ajac, job_in) ));
+	    	break;
+
+	    	case 303:
+	    	CUDA_LAUNCH((OCFD_weno7_M_kernel<<<griddim, blockdim, 0, *stream>>>(i, flagxyzb, pf, pdu, Ajac, job_in) ));
+	    	break;
+    
+	    	case 304:
+	    	CUDA_LAUNCH((OCFD_weno7_SYMBO_M_kernel<<<griddim, blockdim, 0, *stream>>>(i, 0, flagxyzb, pf, pdu, Ajac, job_in) ));//weno7_symbo
+	    	break;
+    
+	    	case 305:
+	    	CUDA_LAUNCH((OCFD_weno7_SYMBO_M_kernel<<<griddim, blockdim, 0, *stream>>>(i, 1, flagxyzb, pf, pdu, Ajac, job_in) ));//weno7_symbo_limiter
+	    	break;
+    
+	    	case 306:
+	    	CUDA_LAUNCH((OCFD_NND2_M_kernel<<<griddim, blockdim, 0, *stream>>>(i, flagxyzb, pf, pdu, Ajac, job_in) ));
+	    	break;
+    
+	    	case 307:
+	    	CUDA_LAUNCH((OCFD_OMP6_M_kernel<<<griddim, blockdim, 0, *stream>>>(i, 0, flagxyzb, pf, pdu, Ajac, job_in) ));
+	    	break;
+    
+	    	case 308:
+	    	CUDA_LAUNCH((OCFD_OMP6_M_kernel<<<griddim, blockdim, 0, *stream>>>(i, 1, flagxyzb, pf, pdu, Ajac, job_in) ));
+	    	break;
+    
+	    	case 309:
+	    	CUDA_LAUNCH((OCFD_OMP6_M_kernel<<<griddim, blockdim, 0, *stream>>>(i, 2, flagxyzb, pf, pdu, Ajac, job_in) ));
+	    	break;
+    
+	    	case 310:
+			if(HybridAuto.Style == 1){
+	    		CUDA_LAUNCH((OCFD_HybridAuto_M_kernel<<<griddim, blockdim, 0, *stream>>>(i, flagxyzb, pf, pdu, Ajac, *HybridAuto.scheme_x, job_in) ));
+			}else if(HybridAuto.Style == 2){
+	    		CUDA_LAUNCH((OCFD_HybridAuto_M_Jameson_kernel<<<griddim, blockdim, 0, *stream>>>(i, flagxyzb, pf, pdu, Ajac, *HybridAuto.scheme_x, job_in) ));
+			}
+			break;
+	    }
+	}
+}
+
+
+void OCFD_dy2_spec(cudaSoA pf, cudaSoA pdu, cudaField Ajac, cudaField Ax, cudaField Ay, cudaField Az, cudaJobPackage job_in, dim3 blockdim_in, cudaStream_t *stream, int boundl, int boundr){
+
+	dim3 size;
+	jobsize(&job_in , &size);
+	dim3 griddim , blockdim;
+	cal_grid_block_dim(&griddim, &blockdim, 8, 7, 4, size.x, size.y, size.z);
+
+	dim3 flagxyzb(5, 0, Non_ref[3]);
+    OCFD_bound_non_ref(&flagxyzb, Non_ref[3], job_in);
+	OCFD_bound(&flagxyzb, boundl, boundr, job_in);
+
+	job_in.end.y  += 1;
+    blockdim.y += 1;
+
+	for(int i=0; i<NSPECS; i++){
+		switch(Scheme_invis_ID){
+			case 301:
+			CUDA_LAUNCH((OCFD_UP7_M_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 302:
+			CUDA_LAUNCH((OCFD_weno5_M_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 303:
+			CUDA_LAUNCH((OCFD_weno7_M_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 304:
+			CUDA_LAUNCH((OCFD_weno7_SYMBO_M_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, 0, flagxyzb, pf, pdu, Ajac, job_in) ));//weno7_symbo
+			break;
+
+			case 305:
+			CUDA_LAUNCH((OCFD_weno7_SYMBO_M_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, 1, flagxyzb, pf, pdu, Ajac, job_in) ));//weno7_symbo_limiter
+			break;
+
+			case 306:
+			CUDA_LAUNCH((OCFD_NND2_M_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 307:
+			CUDA_LAUNCH((OCFD_OMP6_M_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, 0, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 308:
+			CUDA_LAUNCH((OCFD_OMP6_M_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, 1, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 309:
+			CUDA_LAUNCH((OCFD_OMP6_M_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, 2, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 310:
+			if(HybridAuto.Style == 1){
+				CUDA_LAUNCH((OCFD_HybridAuto_M_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, flagxyzb, pf, pdu, Ajac, *HybridAuto.scheme_y, job_in) ));
+			}else if(HybridAuto.Style == 2){
+				CUDA_LAUNCH((OCFD_HybridAuto_M_Jameson_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, flagxyzb, pf, pdu, Ajac, *HybridAuto.scheme_y, job_in) ));
+			}
+			break;
+		}
+	}
+}
+
+
+void OCFD_dz2_spec(cudaSoA pf, cudaSoA pdu, cudaField Ajac, cudaField Ax, cudaField Ay, cudaField Az, cudaJobPackage job_in, dim3 blockdim_in, cudaStream_t *stream, int boundl, int boundr){
+	dim3 size;
+	jobsize(&job_in , &size);
+	dim3 griddim , blockdim;
+	cal_grid_block_dim(&griddim, &blockdim, 8, 7, 4, size.x, size.z, size.y);
+
+	dim3 flagxyzb(6, 0, Non_ref[5]);
+    OCFD_bound_non_ref(&flagxyzb, Non_ref[5], job_in);
+	OCFD_bound(&flagxyzb, boundl, boundr, job_in);
+
+	job_in.end.z  += 1;
+    blockdim.y += 1;
+
+	for(int i=0; i<NSPECS; i++){
+		switch(Scheme_invis_ID){
+			case 301:
+			CUDA_LAUNCH((OCFD_UP7_M_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 302:
+			CUDA_LAUNCH((OCFD_weno5_M_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 303:
+			CUDA_LAUNCH((OCFD_weno7_M_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 304:
+			CUDA_LAUNCH((OCFD_weno7_SYMBO_M_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, 0, flagxyzb, pf, pdu, Ajac, job_in) ));//weno7_symbo
+			break;
+
+			case 305:
+			CUDA_LAUNCH((OCFD_weno7_SYMBO_M_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, 1, flagxyzb, pf, pdu, Ajac, job_in) ));//weno7_symbo_limiter
+			break;
+
+			case 306:
+			CUDA_LAUNCH((OCFD_NND2_M_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 307:
+			CUDA_LAUNCH((OCFD_OMP6_M_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, 0, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 308:
+			CUDA_LAUNCH((OCFD_OMP6_M_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, 1, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 309:
+			CUDA_LAUNCH((OCFD_OMP6_M_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, 2, flagxyzb, pf, pdu, Ajac, job_in) ));
+			break;
+
+			case 310:
+			if(HybridAuto.Style == 1){
+				CUDA_LAUNCH((OCFD_HybridAuto_M_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, flagxyzb, pf, pdu, Ajac, *HybridAuto.scheme_z, job_in) ));
+			}else if(HybridAuto.Style == 2){
+				CUDA_LAUNCH((OCFD_HybridAuto_M_Jameson_kernel<<<griddim, blockdim, 16*8*4*sizeof(REAL), *stream>>>(i, flagxyzb, pf, pdu, Ajac, *HybridAuto.scheme_z, job_in) ));
+			}
+			break;
+		}
+	}
+}
+
 
 void OCFD_dx0_jac(cudaField pf, cudaField pfx, cudaJobPackage job_in, dim3 blockdim_in, cudaStream_t *stream, int bound){
 // field with LAPs

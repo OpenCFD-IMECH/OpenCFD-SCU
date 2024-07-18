@@ -25,8 +25,10 @@ void delete_cudaField_int(cudaField_int * pField);
 
 #define get_SoA(SoA , x,y,z , var,...) (*( SoA.ptr + (__VA_ARGS__ + x + SoA.pitch*(y + ny_d*(z+ (var)*nz_d)))))
 #define get_SoA_LAP(SoA , x,y,z , var,...) (*( SoA.ptr + (__VA_ARGS__ + x + SoA.pitch*(y + ny_2lap_d*(z+ (var)*nz_2lap_d)))))
+#define access_sp_num_data(ptr, x, y) *(ptr + (x) + (y)*NSPECS) 
 
 void new_cudaSoA( cudaSoA ** pSoA, unsigned int size_x , unsigned int size_y , unsigned int size_z );
+void new_cudaSoA_spec( cudaSoA ** pSoA, unsigned int size_x , unsigned int size_y , unsigned int size_z );
 void delete_cudaSoA(cudaSoA * pSoA);
 
 void new_cudaFieldPack(cudaFieldPack ** pack , unsigned int size_x , unsigned int size_y , unsigned int size_z);
@@ -42,6 +44,7 @@ enum {
     D2H = 1
 };
 void memcpy_All(REAL *hostPtr, REAL *devPtr, unsigned int pitch, int mode, unsigned int size_x, unsigned int size_y, unsigned int size_z);
+void memcpy_spec(REAL *hostPtr, cudaSoA *spec, int mode, unsigned int size_x, unsigned int size_y, unsigned int size_z, unsigned int n);
 void memcpy_All_int(int *hostPtr, int *devPtr, unsigned int pitch, int mode, unsigned int size_x, unsigned int size_y, unsigned int size_z);
 void memcpy_inner(REAL *hostPtr, REAL *devPtr, unsigned int pitch, int mode, unsigned int size_x, unsigned int size_y, unsigned int size_z);
 void memcpy_bound_x(REAL *hostPtr, REAL *devPtr, unsigned int pitch, int mode, unsigned int size_x, unsigned int size_y, unsigned int size_z);

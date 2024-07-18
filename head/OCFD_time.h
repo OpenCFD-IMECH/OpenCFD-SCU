@@ -16,6 +16,10 @@ __global__ void OCFD_time_advance_ker1(cudaSoA f , cudaSoA fn , cudaSoA du , cud
 __global__ void OCFD_time_advance_ker2(cudaSoA f , cudaSoA fn , cudaSoA du , cudaJobPackage job);
 __global__ void OCFD_time_advance_ker3(cudaSoA f , cudaSoA fn , cudaSoA du , cudaSoA pf_lap , cudaJobPackage job);
 
+__global__ void OCFD_spec_time_advance_ker1(cudaSoA f , cudaSoA fn , cudaSoA du , cudaJobPackage job, int n);
+__global__ void OCFD_spec_time_advance_ker2(cudaSoA f , cudaSoA fn , cudaSoA du , cudaJobPackage job, int n);
+__global__ void OCFD_spec_time_advance_ker3(cudaSoA f , cudaSoA fn , cudaSoA du , cudaJobPackage job, int n);
+
 #ifdef __cplusplus
 }
 #endif

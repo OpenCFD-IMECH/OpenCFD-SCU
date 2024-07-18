@@ -225,16 +225,16 @@ void Comput_Jacobian3d(){
         printf("Comput Jacobian 3D data OK\n");
 
     // ---------------
-    exchange_boundary_xyz_packed_dev(pAkx  , pAkx_d);
-    exchange_boundary_xyz_packed_dev(pAky  , pAky_d);
-    exchange_boundary_xyz_packed_dev(pAkz  , pAkz_d);
-    exchange_boundary_xyz_packed_dev(pAix  , pAix_d);
-    exchange_boundary_xyz_packed_dev(pAiy  , pAiy_d);
-    exchange_boundary_xyz_packed_dev(pAiz  , pAiz_d);
-    exchange_boundary_xyz_packed_dev(pAsx  , pAsx_d);
-    exchange_boundary_xyz_packed_dev(pAsy  , pAsy_d);
-    exchange_boundary_xyz_packed_dev(pAsz  , pAsz_d);
-    exchange_boundary_xyz_packed_dev(pAjac , pAjac_d);
+    exchange_boundary_xyz_packed_dev(pAkx_d);
+    exchange_boundary_xyz_packed_dev(pAky_d);
+    exchange_boundary_xyz_packed_dev(pAkz_d);
+    exchange_boundary_xyz_packed_dev(pAix_d);
+    exchange_boundary_xyz_packed_dev(pAiy_d);
+    exchange_boundary_xyz_packed_dev(pAiz_d);
+    exchange_boundary_xyz_packed_dev(pAsx_d);
+    exchange_boundary_xyz_packed_dev(pAsy_d);
+    exchange_boundary_xyz_packed_dev(pAsz_d);
+    exchange_boundary_xyz_packed_dev(pAjac_d);
 
     boundary_Jac3d_Liftbody_Ajac(); //boudary condition for Axx, Ayy, Azz, Aix, Aiy, Aiz , ......
 

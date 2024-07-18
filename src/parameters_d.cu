@@ -38,8 +38,12 @@ cudaField *pAxx_d,*pAyy_d,*pAzz_d,*pAkx_d,*pAky_d,*pAkz_d,*pAix_d,*pAiy_d,*pAiz_
 
 // calculate memory
 cudaField *pAmu_d; // viscous 3d [nz][ny][nx]
-cudaField *pd_d,*pu_d,*pv_d,*pw_d,*pT_d,*pP_d; //  [nz+2*LAP][ny+2*LAP][nx+2*LAP]
+cudaField *pd_d,*pu_d,*pv_d,*pw_d,*pT_d,*pP_d, *pe_d; //  [nz+2*LAP][ny+2*LAP][nx+2*LAP]
 cudaSoA *pf_d,*pfn_d,*pdu_d; // [5][nz][ny][nx]
+
+// memory space for species
+cudaSoA *pspec_d, *pspecn_d, *pdspec_d;
+cudaField *pO_d,*pO2_d,*pN_d,*pNO_d,*pN2_d; //  [nz+2*LAP][ny+2*LAP][nx+2*LAP]
 
 // used in filtering
 cudaSoA *pf_lap_d; // [nz+2*LAP][ny+2*LAP][nx+2*LAP][5]
@@ -61,6 +65,14 @@ cudaField *pcc_d; // [nz+2*LAP][ny+2*LAP][nx+2*LAP]
 // used in invis jacobian , is part of ptmpb
 cudaField *pdfp_d , *pdfm_d; // [nz][ny][nx]
 
+cudaSoA *pfpi_x_d; // [5][nz-2*LAP][ny-2*LAP][nx-2*LAP]
+cudaSoA *pfmi_x_d; // [5][nz-2*LAP][ny-2*LAP][nx-2*LAP]
+
+cudaSoA *pfpi_y_d; // [5][nz-2*LAP][ny-2*LAP][nx-2*LAP]
+cudaSoA *pfmi_y_d; // [5][nz-2*LAP][ny-2*LAP][nx-2*LAP]
+
+cudaSoA *pfpi_z_d; // [5][nz-2*LAP][ny-2*LAP][nx-2*LAP]
+cudaSoA *pfmi_z_d; // [5][nz-2*LAP][ny-2*LAP][nx-2*LAP]
 
 // used in vis jacobian , is part of ptmpb
 cudaField * pEv1_d,*pEv2_d,*pEv3_d,*pEv4_d;  // [nz+2*LAP][ny+2*LAP][nx+2*LAP]

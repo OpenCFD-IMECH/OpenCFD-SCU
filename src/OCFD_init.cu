@@ -22,6 +22,32 @@
 extern "C"{
 #endif
 
+__global__ void init_spec_ker(cudaSoA f,  cudaField d, cudaJobPackage job){
+    // eyes on no-lap region
+    unsigned int x = blockDim.x * blockIdx.x + threadIdx.x + job.start.x;
+	unsigned int y = blockDim.y * blockIdx.y + threadIdx.y + job.start.y;
+	unsigned int z = blockDim.z * blockIdx.z + threadIdx.z + job.start.z;
+
+	if(x < job.end.x && y < job.end.y && z < job.end.z){
+        REAL rho;
+        rho = get_Field_LAP(d, x, y, z);
+
+        get_SoA_LAP(f, x, y, z, 0) = 0.0*rho;
+        get_SoA_LAP(f, x, y, z, 1) = 0.23*rho;
+        get_SoA_LAP(f, x, y, z, 2) = 0.0*rho;
+        get_SoA_LAP(f, x, y, z, 3) = 0.0*rho;
+        get_SoA_LAP(f, x, y, z, 4) = 0.77*rho;
+    }
+}
+
+void init_spec(cudaSoA *spec, cudaField *d)
+{
+    dim3 griddim , blockdim;
+    cal_grid_block_dim(&griddim , &blockdim , BlockDimX , BlockDimY , BlockDimZ , nx+2*LAP,ny+2*LAP,nz+2*LAP);
+    cudaJobPackage job(dim3(0,0,0) , dim3(nx+2*LAP,ny+2*LAP,nz+2*LAP));
+
+    CUDA_LAUNCH(( init_spec_ker<<<griddim , blockdim>>>(*spec , *d, job) ))
+}
 
 void init()
 {
@@ -46,9 +72,12 @@ void init()
         cuda_mem_value_init_warp(0.0 , pP_d->ptr , pP_d->pitch , nx_2lap , ny_2lap , nz_2lap);
         //cuda_mem_value_init_warp(0.0 , pf_lap_d->ptr , pf_lap_d->pitch , nx_2lap , ny_2lap , nz_2lap*5);
         cuda_mem_value_init_warp(0.0 , pcc_d->ptr, pcc_d->pitch, nx_2lap , ny_2lap , nz_2lap);
-        cuda_mem_value_init_warp(0.0 , pf_d->ptr , pf_d->pitch , nx      , ny      , nz*5   );
-        cuda_mem_value_init_warp(0.0 , pfn_d->ptr, pfn_d->pitch, nx      , ny      , nz*5   );
-        cuda_mem_value_init_warp(0.0 , pdu_d->ptr, pdu_d->pitch, nx      , ny      , nz*5   );
+        cuda_mem_value_init_warp(0.0 , pf_d->ptr , pf_d->pitch , nx      , ny      , nz*NVARS   );
+        cuda_mem_value_init_warp(0.0 , pfn_d->ptr, pfn_d->pitch, nx      , ny      , nz*NVARS   );
+        cuda_mem_value_init_warp(0.0 , pdu_d->ptr, pdu_d->pitch, nx      , ny      , nz*NVARS   );
+        cuda_mem_value_init_warp(0.0 , pspec_d->ptr , pspec_d->pitch , nx_2lap, ny_2lap, nz_2lap*NSPECS   );
+        cuda_mem_value_init_warp(0.0 , pspecn_d->ptr, pspecn_d->pitch, nx_2lap, ny_2lap, nz_2lap*NSPECS   );
+        cuda_mem_value_init_warp(0.0 , pdspec_d->ptr, pdspec_d->pitch, nx, ny, nz*NSPECS   );
         cuda_mem_value_init_warp(0.0 , pEv1_d->ptr , pEv1_d->pitch , nx_2lap , ny_2lap , nz_2lap);
         cuda_mem_value_init_warp(0.0 , pEv2_d->ptr , pEv2_d->pitch , nx_2lap , ny_2lap , nz_2lap);
         cuda_mem_value_init_warp(0.0 , pEv3_d->ptr , pEv3_d->pitch , nx_2lap , ny_2lap , nz_2lap);
@@ -62,8 +91,14 @@ void init()
         tmp = pw; for(int i=0;i<tmp_size;i++) (*tmp++) = 0.0;
         tmp = pT; for(int i=0;i<tmp_size;i++) (*tmp++) = 0.0;
         tmp = pP; for(int i=0;i<tmp_size;i++) (*tmp++) = 0.0;
+
+        tmp = pO; for(int i=0;i<tmp_size;i++) (*tmp++) = 0.0;
+        tmp = pO2; for(int i=0;i<tmp_size;i++) (*tmp++) = 0.0;
+        tmp = pN; for(int i=0;i<tmp_size;i++) (*tmp++) = 0.0;
+        tmp = pNO; for(int i=0;i<tmp_size;i++) (*tmp++) = 0.0;
+        tmp = pN2; for(int i=0;i<tmp_size;i++) (*tmp++) = 0.0;
+
         tmp = pf_lap; for(int i=0;i<tmp_size*5;i++) (*tmp++) = 0.0;
-        tmp = pcc; for(int i=0;i<tmp_size;i++) (*tmp++) = 0.0;
         tmp = pEv1; for(int i=0;i<tmp_size;i++) (*tmp++) = 0.0;
         tmp = pEv2; for(int i=0;i<tmp_size;i++) (*tmp++) = 0.0;
         tmp = pEv3; for(int i=0;i<tmp_size;i++) (*tmp++) = 0.0;
@@ -94,6 +129,8 @@ void init()
         memcpy_inner(pv , pv_d->ptr , pv_d->pitch , H2D , nx_2lap , ny_2lap , nz_2lap);
         memcpy_inner(pw , pw_d->ptr , pw_d->pitch , H2D , nx_2lap , ny_2lap , nz_2lap);
         memcpy_inner(pT , pT_d->ptr , pT_d->pitch , H2D , nx_2lap , ny_2lap , nz_2lap);
+
+        init_spec(pspec_d, pd_d);
 
 	}
 
@@ -177,9 +214,6 @@ void opencfd_mem_init()
 
     pAmu = (REAL *)malloc_me(tmp_size);
 
-    pdfp = (REAL*)malloc_me(tmp_size*5);
-    pdfm = (REAL*)malloc_me(tmp_size*5);
-
     pui = (REAL*)malloc_me(tmp_size);
     pus = (REAL*)malloc_me(tmp_size);
     puk = (REAL*)malloc_me(tmp_size);
@@ -193,9 +227,6 @@ void opencfd_mem_init()
     pTi = (REAL*)malloc_me(tmp_size);
     pTs = (REAL*)malloc_me(tmp_size);
 
-    pQ = (REAL*)malloc_me(tmp_size);
-    pLamda2 = (REAL*)malloc_me(tmp_size);
-
     // computing data with LAP
     tmp_size = (nx + 2 * LAP) * (ny + 2 * LAP) * (nz + 2 * LAP) * sizeof(REAL);
     pd = (REAL *)malloc_me(tmp_size);
@@ -205,10 +236,13 @@ void opencfd_mem_init()
     pT = (REAL *)malloc_me(tmp_size);
     pP = (REAL *)malloc_me(tmp_size);
 
+    pO = (REAL *)malloc_me(tmp_size);
+    pO2 = (REAL *)malloc_me(tmp_size);
+    pN = (REAL *)malloc_me(tmp_size);
+    pNO = (REAL *)malloc_me(tmp_size);
+    pN2 = (REAL *)malloc_me(tmp_size);
+
     pf_lap = (REAL*)malloc_me(tmp_size*5);
-    pfp = (REAL*)malloc_me(tmp_size*5);
-    pfm = (REAL*)malloc_me(tmp_size*5);
-    pcc = (REAL*)malloc_me(tmp_size);
 
     pEv1 = (REAL*)malloc_me(tmp_size);
     pEv2 = (REAL*)malloc_me(tmp_size);
@@ -258,9 +292,6 @@ void opencfd_mem_finalize()
 
     free(pAmu);
 
-    free(pdfp);
-    free(pdfm);
-
     free(pui);
     free(pus);
     free(puk);
@@ -281,17 +312,18 @@ void opencfd_mem_finalize()
     free(pT);
     free(pP);
     
+    free(pO);
+    free(pO2);
+    free(pN);
+    free(pNO);
+    free(pN2);
+
     free(pf_lap);
-    free(pfp);
-    free(pfm);
-    free(pcc);
     
     free(pEv1);
     free(pEv2);
     free(pEv3);
     free(pEv4);
-    free(pQ);
-    free(pLamda2);
 
     cudaFreeHost(pack_send_x);
     cudaFreeHost(pack_recv_x);
@@ -434,9 +466,18 @@ void opencfd_mem_init_dev(){
     new_cudaField(&pT_d , nx+2*LAP , ny+2*LAP , nz+2*LAP);
     new_cudaField(&pP_d , nx+2*LAP , ny+2*LAP , nz+2*LAP);
 
+    new_cudaField(&pO_d , nx+2*LAP , ny+2*LAP , nz+2*LAP);
+    new_cudaField(&pO2_d , nx+2*LAP , ny+2*LAP , nz+2*LAP);
+    new_cudaField(&pN_d , nx+2*LAP , ny+2*LAP , nz+2*LAP);
+    new_cudaField(&pNO_d , nx+2*LAP , ny+2*LAP , nz+2*LAP);
+    new_cudaField(&pN2_d , nx+2*LAP , ny+2*LAP , nz+2*LAP);
+
     new_cudaSoA(&pf_d  , nx , ny , nz);
     new_cudaSoA(&pfn_d , nx , ny , nz);
     new_cudaSoA(&pdu_d , nx , ny , nz);
+    new_cudaSoA_spec(&pspec_d ,  nx+2*LAP, ny+2*LAP, nz+2*LAP);
+    new_cudaSoA_spec(&pspecn_d , nx+2*LAP, ny+2*LAP, nz+2*LAP);
+    new_cudaSoA_spec(&pdspec_d , nx, ny, nz);
 
     new_cudaField( &pcc_d , nx+2*LAP , ny+2*LAP , nz+2*LAP);
 
@@ -452,6 +493,15 @@ void opencfd_mem_init_dev(){
 
     new_cudaSoA( &pfp_z_d , nx+2*LAP, ny+2*LAP, nz+2*LAP);
     new_cudaSoA( &pfm_z_d , nx+2*LAP, ny+2*LAP, nz+2*LAP);
+
+    new_cudaSoA_spec( &pfpi_x_d , nx+2*LAP , ny+2*LAP, nz+2*LAP);
+    new_cudaSoA_spec( &pfmi_x_d , nx+2*LAP , ny+2*LAP, nz+2*LAP);
+
+    new_cudaSoA_spec( &pfpi_y_d , nx+2*LAP, ny+2*LAP, nz+2*LAP);
+    new_cudaSoA_spec( &pfmi_y_d , nx+2*LAP, ny+2*LAP, nz+2*LAP);
+
+    new_cudaSoA_spec( &pfpi_z_d , nx+2*LAP, ny+2*LAP, nz+2*LAP);
+    new_cudaSoA_spec( &pfmi_z_d , nx+2*LAP, ny+2*LAP, nz+2*LAP);
 
     new_cudaField( &vis_u_d , nx , ny , nz);
     new_cudaField( &vis_v_d , nx , ny , nz);
@@ -515,6 +565,9 @@ void opencfd_mem_finalize_dev(){
     delete_cudaSoA(pf_d );
     delete_cudaSoA(pfn_d);
     delete_cudaSoA(pdu_d);
+    delete_cudaSoA(pspec_d );
+    delete_cudaSoA(pspecn_d);
+    delete_cudaSoA(pdspec_d);
 
     //delete_cudaSoA(pf_lap_d);
 
@@ -527,6 +580,15 @@ void opencfd_mem_finalize_dev(){
     delete_cudaSoA(pfp_z_d);
     delete_cudaSoA(pfm_z_d);
     
+    delete_cudaSoA(pfpi_x_d);
+    delete_cudaSoA(pfmi_x_d);
+
+    delete_cudaSoA(pfpi_y_d);
+    delete_cudaSoA(pfmi_y_d);
+
+    delete_cudaSoA(pfpi_z_d);
+    delete_cudaSoA(pfmi_z_d);
+
     delete_cudaField(pcc_d);
     
     //delete_cudaField(pdfp_d);

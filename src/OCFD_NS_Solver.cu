@@ -43,11 +43,12 @@ void NS_solver_real()
     //  Amu=0.d0;
     // ----------------initial---------------------------------------------------------
 
-    exchange_boundary_xyz_packed_dev(pd , pd_d);
-    exchange_boundary_xyz_packed_dev(pu , pu_d);
-    exchange_boundary_xyz_packed_dev(pv , pv_d);
-    exchange_boundary_xyz_packed_dev(pw , pw_d);
-    exchange_boundary_xyz_packed_dev(pT , pT_d);
+    exchange_boundary_xyz_packed_dev(pd_d);
+    exchange_boundary_xyz_packed_dev(pu_d);
+    exchange_boundary_xyz_packed_dev(pv_d);
+    exchange_boundary_xyz_packed_dev(pw_d);
+    exchange_boundary_xyz_packed_dev(pT_d);
+    exchange_spec_boundary_xyz_packed_dev(pspec_d);
 
     OCFD_bc();
     
@@ -70,6 +71,10 @@ void NS_solver_real()
             tmp = pf_d->ptr;
             pf_d->ptr = pfn_d->ptr;
             pfn_d->ptr = tmp;
+
+            tmp = pspec_d->ptr;
+            pspec_d->ptr = pspecn_d->ptr;
+            pspecn_d->ptr = tmp;
         }
 
         // 3-step Runge-Kutta
@@ -80,8 +85,10 @@ void NS_solver_real()
             
             OCFD_time_advance(KRK);
             
-            get_duvwT();
+            get_duvw();
 
+            update_TP();
+            
             OCFD_bc();
 
             get_Amu();
@@ -160,7 +167,13 @@ void NS_solver_real()
             memcpy_All(pv , pv_d->ptr , pv_d->pitch , D2H , nx_2lap , ny_2lap , nz_2lap);
             memcpy_All(pw , pw_d->ptr , pw_d->pitch , D2H , nx_2lap , ny_2lap , nz_2lap);
             memcpy_All(pT , pT_d->ptr , pT_d->pitch , D2H , nx_2lap , ny_2lap , nz_2lap);
-            OCFD_save(0, Istep , pd , pu , pv , pw , pT);
+
+            get_spec();
+
+            memcpy_All(pO2 , pO2_d->ptr , pO2_d->pitch , D2H , nx_2lap , ny_2lap , nz_2lap);
+            memcpy_All(pN2 , pN2_d->ptr , pN2_d->pitch , D2H , nx_2lap , ny_2lap , nz_2lap);
+
+            OCFD_save_final(0, Istep , pd , pu , pv , pw , pT, pO2, pN2);
         }
         if(end_time <= 0.0) break; //end_time .le. 0  means that stop computation just after saving files
 

@@ -110,6 +110,12 @@ REAL *pAmu; // viscous 3d [nz][nt][nx]
 REAL *pd,*pu,*pv,*pw,*pT,*pP; //  [nz+2*LAP][ny+2*LAP][nx+2*LAP]
 REAL *pf,*pfn,*pdu; // [5][nz][ny][nx]
 
+REAL *pO;
+REAL *pO2;
+REAL *pN;
+REAL *pNO;
+REAL *pN2;
+
 // used in filtering
 REAL *pf_lap; // [nz+2*LAP][ny+2*LAP][nx+2*LAP][5]
 
@@ -163,7 +169,7 @@ int IF_CHARTERIC;
 
 
 
-configItem configList[27] = {
+config configList[27] = {
     {"GRID_3D", 0},                 //0
     {"PARALLEL_3D", 0},             //1
     {"LAP", 0},                     //2
@@ -198,7 +204,7 @@ void read_parameters(){
 //-------------------------------------------
     int dummy_i, tmp;
     REAL dummy_r;
-    int configNum = sizeof(configList)/sizeof(configItem);
+    int configNum = sizeof(configList)/sizeof(config);
     char Scheme_invis[50], Scheme_vis[50];
     char Part_buff[50][1000];
 
@@ -243,7 +249,7 @@ void read_parameters(){
 
             int (*HybridAuto_zones)[6] = (int(*)[6])HybridAuto.zones;
 
-            configItem Hybridbuff = {"HY_DP_INTV", 0};
+            config Hybridbuff = {"HY_DP_INTV", 0};
             SearchItem(file, &Hybridbuff, 1);
 
             tmp = PartItem(Hybridbuff.value, Part_buff);
@@ -308,7 +314,7 @@ void read_parameters(){
         Filter_rpara = (REAL(*)[3])malloc(sizeof(REAL)*(NFiltering+1)*3);
 
         for(int i=0;i<NFiltering;i++){
-            configItem Hybridbuff;
+            config Hybridbuff;
             //ntime, Filter_X, Filter_Y, Filter_Z, ib, ie, jb, je, kb, ke, Filter_scheme
             sprintf(Hybridbuff.name, "FILTER_NPARA%d", NameNUM[i]);
             SearchItem(file, &Hybridbuff, 1);
@@ -333,7 +339,7 @@ void read_parameters(){
         Kstep_ana = (int*)malloc(sizeof(int)*N_ana);
 
         for(int i=0;i<N_ana;i++){
-            configItem Hybridbuff;
+            config Hybridbuff;
             sprintf(Hybridbuff.name, "ANA_EVENT%d", NameNUM[i]);
             SearchItem(file, &Hybridbuff, 1);
 
@@ -717,7 +723,7 @@ int StringToInteger(char *buff){
 }
 
 
-void SearchItem(FILE *file, configItem *List, int configNum){
+void SearchItem(FILE *file, config *List, int configNum){
     int N = 1000;
     char buff[N];
     char name[N];

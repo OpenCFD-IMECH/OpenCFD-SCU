@@ -4,6 +4,7 @@
 #include "cuda_utility.h"
 #include "parameters.h"
 #include "parameters_d.h"
+#include "opencc.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -74,14 +75,14 @@ void pri_to_cons_kernel_warp(cudaSoA *pcons , cudaField *pd , cudaField *pu , cu
 
 /* ========================= */
 
-__global__ void cons_to_pri_kernel(cudaSoA f, cudaField d , cudaField u , cudaField v , cudaField w , cudaField T , cudaField P , cudaJobPackage job){
+__global__ void cons_to_pri_kernel(cudaSoA f, cudaSoA spec, cudaField d , cudaField u , cudaField v , cudaField w , cudaJobPackage job){
     // eyes on no-lap region
     unsigned int x = blockDim.x * blockIdx.x + threadIdx.x + job.start.x;
 	unsigned int y = blockDim.y * blockIdx.y + threadIdx.y + job.start.y;
 	unsigned int z = blockDim.z * blockIdx.z + threadIdx.z + job.start.z;
 
 	if(x < job.end.x && y < job.end.y && z < job.end.z){
-        REAL d1,u1,v1,w1,T1,d2,T2;
+        REAL d1,u1,v1,w1,d2;
         
         d1 = get_SoA(f, x, y, z, 0);
         get_Field_LAP(d, x+LAP, y+LAP, z+LAP) = d2 = d1;
@@ -98,23 +99,116 @@ __global__ void cons_to_pri_kernel(cudaSoA f, cudaField d , cudaField u , cudaFi
         w1 = w1/d1;
         get_Field_LAP(w, x+LAP, y+LAP, z+LAP) = w1;
 
-        T1 = get_SoA(f, x, y, z, 4);
-        get_Field_LAP(T, x+LAP, y+LAP, z+LAP) = T2 = (T1 - 0.5*d1*(u1*u1 + v1*v1 + w1*w1))/(d1*Cv_d);
-        // T1 = T1/(d1*Cv_d);
-        //T1 = T1 - 0.5*(u1*u1 + v1*v1 + w1*w1)/d1;
-        // get_Field_LAP(P, x+LAP, y+LAP, z+LAP) = T1*(Gamma_d - 1.0);
-        // get_Field_LAP(T , x+LAP , y+LAP , z+LAP) = T1/Cv_d;
-        get_Field_LAP(P, x+LAP, y+LAP, z+LAP) = T2*d2/(Gamma_d*Ama_d*Ama_d);
+        REAL sum = 0.0;
+
+        for (int n=0; n<NSPECS; ++n) {
+            sum += get_SoA_LAP(spec, x+LAP, y+LAP, z+LAP, n);
+        }
+        for (int n=0; n<NSPECS; ++n) {
+            get_SoA_LAP(spec, x+LAP, y+LAP, z+LAP, n) *= d2/sum;
+        }
     }
 }
 
-void get_duvwT()
+__global__ void get_spec_kernel(cudaSoA f, cudaField O , cudaField O2 , cudaField N , cudaField NO , cudaField N2 , cudaJobPackage job){
+    // eyes on no-lap region
+    unsigned int x = blockDim.x * blockIdx.x + threadIdx.x + job.start.x;
+	unsigned int y = blockDim.y * blockIdx.y + threadIdx.y + job.start.y;
+	unsigned int z = blockDim.z * blockIdx.z + threadIdx.z + job.start.z;
+
+	if(x < job.end.x && y < job.end.y && z < job.end.z){
+        REAL s1, s2, s3, s4, s5;
+        
+        s1 = get_SoA_LAP(f, x+LAP, y+LAP, z+LAP, 0);
+        get_Field_LAP(O, x+LAP, y+LAP, z+LAP) = s1;
+
+        s2 = get_SoA_LAP(f, x+LAP, y+LAP, z+LAP, 1);
+        get_Field_LAP(O2, x+LAP, y+LAP, z+LAP) = s2;
+
+        s3 = get_SoA_LAP(f, x+LAP, y+LAP, z+LAP, 2);
+        get_Field_LAP(N, x+LAP, y+LAP, z+LAP) = s3;
+
+        s4 = get_SoA_LAP(f, x+LAP, y+LAP, z+LAP, 3);
+        get_Field_LAP(NO, x+LAP, y+LAP, z+LAP) = s4;
+
+        s5 = get_SoA_LAP(f, x+LAP, y+LAP, z+LAP, 4);
+        get_Field_LAP(N2, x+LAP, y+LAP, z+LAP) = s5;
+    }
+}
+
+__global__ void pre_input(cudaSoA pspec_d, cudaSoA pf_d , cudaField pT_d, REAL *Yi, REAL *rho, REAL * T, REAL *E, cudaJobPackage job){
+    // eyes on no-lap region
+    unsigned int x = blockDim.x * blockIdx.x + threadIdx.x + job.start.x;
+	unsigned int y = blockDim.y * blockIdx.y + threadIdx.y + job.start.y;
+	unsigned int z = blockDim.z * blockIdx.z + threadIdx.z + job.start.z;
+
+	if(x < job.end.x && y < job.end.y && z < job.end.z){
+        REAL Ei, rhoi, Ti, mxi, myi, mzi, ei;
+        REAL rho_dim, e_dim;
+
+        rhoi = get_SoA_LAP(pf_d, x+LAP, y+LAP, z+LAP, 0);
+        mxi = get_SoA_LAP(pf_d, x+LAP, y+LAP, z+LAP, 1);
+        myi = get_SoA_LAP(pf_d, x+LAP, y+LAP, z+LAP, 2);
+        mzi = get_SoA_LAP(pf_d, x+LAP, y+LAP, z+LAP, 3);
+        Ei = get_SoA_LAP(pf_d, x+LAP, y+LAP, z+LAP, 4);
+        Ti = get_Field_LAP(pT_d, x+LAP, y+LAP, z+LAP);
+
+        ei = Ei - 0.5/rhoi*(mxi*mxi + myi+myi + mzi*mzi);
+
+        for (int i=0; i<NSPECS; ++i) {
+            access_sp_num_data(Yi, i, x + nx*(y + z*ny)) = get_SoA_LAP(pspec_d, x+LAP, y+LAP, z+LAP, i)/rhoi;
+        }
+
+        // dimension of ei and rhoi, Ti
+        E[x + nx*(y + z*ny)] = ei*1733.1048;
+        rho[x + nx*(y + z*ny)] = rhoi*0.0219014;
+        T[x + nx*(y + z*ny)] = Ti*Ref_T;
+    }
+}
+
+__global__ void post_output(cudaField pT_d, cudaField pP_d, REAL * T, REAL *P, cudaJobPackage job){
+    // eyes on no-lap region
+    unsigned int x = blockDim.x * blockIdx.x + threadIdx.x + job.start.x;
+	unsigned int y = blockDim.y * blockIdx.y + threadIdx.y + job.start.y;
+	unsigned int z = blockDim.z * blockIdx.z + threadIdx.z + job.start.z;
+
+	if(x < job.end.x && y < job.end.y && z < job.end.z){
+        get_Field_LAP(pT_d, x+LAP, y+LAP, z+LAP) = T[x + nx*(y + z*ny)]/Ref_T;
+        get_Field_LAP(pP_d, x+LAP, y+LAP, z+LAP) = P[x + nx*(y + z*ny)]/679.48436;
+    }
+}
+
+void get_duvw()
 {
     dim3 griddim , blockdim;
     cal_grid_block_dim(&griddim , &blockdim , BlockDimX , BlockDimY , BlockDimZ , nx,ny,nz);
     cudaJobPackage job(dim3(0,0,0) , dim3(nx,ny,nz));
 
-    CUDA_LAUNCH(( cons_to_pri_kernel<<<griddim , blockdim>>>(*pf_d , *pd_d , *pu_d , *pv_d , *pw_d , *pT_d , *pP_d , job) ))
+    CUDA_LAUNCH(( cons_to_pri_kernel<<<griddim , blockdim>>>(*pf_d , *pspec_d, *pd_d , *pu_d , *pv_d , *pw_d  , job) ))
+}
+
+void update_TP()
+{
+    dim3 griddim , blockdim;
+    cal_grid_block_dim(&griddim , &blockdim , BlockDimX , BlockDimY , BlockDimZ , nx,ny,nz);
+    cudaJobPackage job(dim3(0,0,0) , dim3(nx,ny,nz));
+
+// Array shape
+    // CUDA_LAUNCH(( to1D<<<griddim , blockdim>>>(*pf_d , *pspec_d, *pd_d , *pu_d , *pv_d , *pw_d  , job) ))
+// dimension and data: E, 2d_array spec
+    CUDA_LAUNCH(( pre_input<<<griddim , blockdim>>>(*pspec_d, *pf_d , *pT_d , Yi , *pw_d  , job) ))
+    opencc_thermo_update_by_rhoUY(e, pP_d->ptr, pd_d->ptr, spec, pT_d->ptr, GPU);
+    CUDA_LAUNCH(( post_output<<<griddim , blockdim>>>(*pf_d , *pspec_d, *pd_d , *pu_d , *pv_d , *pw_d  , job) ))
+    // CUDA_LAUNCH(( to3D<<<griddim , blockdim>>>(*pf_d , *pspec_d, *pd_d , *pu_d , *pv_d , *pw_d  , job) ))
+}
+
+void get_spec()
+{
+    dim3 griddim , blockdim;
+    cal_grid_block_dim(&griddim , &blockdim , BlockDimX , BlockDimY , BlockDimZ , nx,ny,nz);
+    cudaJobPackage job(dim3(0,0,0) , dim3(nx,ny,nz));
+
+    CUDA_LAUNCH(( get_spec_kernel<<<griddim , blockdim>>>(*pspec_d , *pO_d , *pO2_d , *pN_d , *pNO_d , *pN2_d , job) ))
 }
 
 // -----Computation of viscousity ---------------------------------------------
