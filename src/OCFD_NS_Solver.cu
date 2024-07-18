@@ -85,8 +85,10 @@ void NS_solver_real()
             
             OCFD_time_advance(KRK);
             
-            get_duvwT();
+            get_duvw();
 
+            update_TP();
+            
             OCFD_bc();
 
             get_Amu();

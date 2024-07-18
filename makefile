@@ -86,7 +86,7 @@ clean:
 else
 #nvcc compiler
 
-MPI_PATH=/usr/local/openmpi-4.1.5
+MPI_PATH=/usr/
 #MPI_PATH=/home/dglin/intel/compilers_and_libraries_2019.4.243/linux/mpi/intel64/
 DEV_PATH=/usr/local/cuda
 
@@ -102,7 +102,7 @@ DEV_PATH=/usr/local/cuda
 #DEV_PATH=$(CUDA)
 
 DEV=nvcc
-HOST=$(MPI_PATH)/bin/mpicc
+HOST=$(MPI_PATH)/bin/mpic++
 
 OPT_Commen=-O3
 
@@ -112,7 +112,7 @@ OPT_Host+= $(OPT_Commen)
 OPT_Dev=-dc -I $(MPI_PATH)/include -I $(DEV_PATH)/include
 OPT_Dev+=$(OPT_Commen) -arch=compute_86
 
-OpenCC_PATH=/home/david/Desktop/SCU-comb/OpenCC
+OpenCC_PATH=/home/sdp/SCU-comb/OpenCC
 
 
 opencfd.o : opencfd.c

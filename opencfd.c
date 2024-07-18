@@ -47,13 +47,13 @@ int main(int argc, char *argv[]){
 
     init();
 
-    char *fname = "./chem_h2.yaml";
-    int size = 5;
-    double T[4] = {1,2,3,4};  
-    double P[4] = {1,2,3,4};  
-    double Y[4] = {1,2,3,4}; 
+    char *fname = "./air.yaml";
+    int size = nx*ny*nz;
+    double *T = nullptr;  
+    double *P = nullptr;  
+    double *Y = nullptr; 
 
-    opencc_ode_init(fname, size, T, P, Y);
+    opencc_ode_init(fname, size, T, P, Y, 0);
 #ifdef PROFILING
 cudaProfilerStart();
 #endif

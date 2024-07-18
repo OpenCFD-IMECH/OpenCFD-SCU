@@ -14,7 +14,8 @@ __global__ void pri_to_cons_kernel(cudaSoA pcons , cudaField pd , cudaField pu ,
 void pri_to_cons_kernel_warp(cudaSoA *pcons , cudaField *pd , cudaField *pu , cudaField *pv , cudaField *pw , cudaField *pT , cudaJobPackage job_in , dim3 blockdim_in );
 
 __global__ void cons_to_pri_kernel(cudaSoA f, cudaSoA spec, cudaField d , cudaField u , cudaField v , cudaField w , cudaField T , cudaField P , cudaJobPackage job);
-void get_duvwT();
+void get_duvw();
+void update_TP();
 
 __global__ void get_spec_kernel(cudaSoA f, cudaField d , cudaField u , cudaField v , cudaField w , cudaField T , cudaJobPackage job);
 void get_spec();

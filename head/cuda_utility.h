@@ -25,6 +25,7 @@ void delete_cudaField_int(cudaField_int * pField);
 
 #define get_SoA(SoA , x,y,z , var,...) (*( SoA.ptr + (__VA_ARGS__ + x + SoA.pitch*(y + ny_d*(z+ (var)*nz_d)))))
 #define get_SoA_LAP(SoA , x,y,z , var,...) (*( SoA.ptr + (__VA_ARGS__ + x + SoA.pitch*(y + ny_2lap_d*(z+ (var)*nz_2lap_d)))))
+#define access_sp_num_data(ptr, x, y) *(ptr + (x) + (y)*NSPECS) 
 
 void new_cudaSoA( cudaSoA ** pSoA, unsigned int size_x , unsigned int size_y , unsigned int size_z );
 void new_cudaSoA_spec( cudaSoA ** pSoA, unsigned int size_x , unsigned int size_y , unsigned int size_z );

@@ -1,0 +1,137 @@
+description: |-
+  Ideal gas properties of air. Includes several reactions among
+  the included species. Park air5 reaction mechanism. Rates taken from:
+  1) Park et al., JTHT 15(1):76-90, 2001.
+  2) Park, JTHT 7(3):385-398, 1993.
+
+generator: ck2yaml
+input-files: [air.inp, gri30_tran.dat]
+cantera-version: 2.5.0
+date: Wed, 11 Dec 2019 16:59:03 -0500
+
+units: {length: cm, time: s, quantity: mol, activation-energy: cal/mol}
+
+phases:
+- name: air
+  thermo: ideal-gas
+  elements: [O, N]
+  species: [O, O2, N, NO, N2]
+  kinetics: gas
+  transport: mixture-averaged
+  state: {T: 300.0, P: 1 atm, X: {O2: 0.21, N2: 0.79}}
+
+species:
+- name: O
+  composition: {O: 1}
+  thermo:
+    model: NASA7
+    temperature-ranges: [200.0, 1000.0, 6000.0]
+    data:
+    - [3.1682671, -3.27931884e-03, 6.64306396e-06, -6.12806624e-09, 2.11265971e-12,
+      2.91222592e+04, 2.05193346]
+    - [2.54363697, -2.73162486e-05, -4.1902952e-09, 4.95481845e-12, -4.79553694e-16,
+      2.9226012e+04, 4.92229457]
+    note: L1/90
+  transport:
+    viscosity: [-4.93602341e-03, 3.09432639e-03, -6.00128303e-04, 5.31827013e-05, -1.75735763e-06]
+    thermal-conductivity: [2.68298383e-02, -1.57408872e-02, 3.72173943e-03, -3.81301128e-04, 1.47000317e-05]
+    model: gas
+    geometry: atom
+    well-depth: 80.0
+    diameter: 2.75
+- name: O2
+  composition: {O: 2}
+  thermo:
+    model: NASA7
+    temperature-ranges: [200.0, 1000.0, 6000.0]
+    data:
+    - [3.78245636, -2.99673415e-03, 9.847302e-06, -9.68129508e-09, 3.24372836e-12,
+      -1063.94356, 3.65767573]
+    - [3.66096083, 6.56365523e-04, -1.41149485e-07, 2.05797658e-11, -1.29913248e-15,
+      -1215.97725, 3.41536184]
+    note: TPIS89
+  transport:
+    viscosity: [-6.18642807e-03, 3.61882451e-03, -6.86198340e-04, 5.91601271e-05, -1.90497718e-06]
+    thermal-conductivity: [8.38237048e-02, -5.01278005e-02, 1.12070414e-02, -1.09667406e-03, 4.01802136e-05]
+    model: gas
+    geometry: linear
+    well-depth: 107.4
+    diameter: 3.458
+    polarizability: 1.6
+    rotational-relaxation: 3.8
+- name: N
+  composition: {N: 1}
+  thermo:
+    model: NASA7
+    temperature-ranges: [200.0, 1000.0, 6000.0]
+    data:
+    - [2.5, 0.0, 0.0, 0.0, 0.0, 5.61046378e+04, 4.19390932]
+    - [2.41594293, 1.748906e-04, -1.19023667e-07, 3.02262387e-11, -2.0360979e-15,
+      5.61337748e+04, 4.64960986]
+    note: L 6/88
+  transport:
+    viscosity: [-3.51092531e-03,  2.27360281e-03, -4.44434535e-04,  3.98012214e-05, -1.32807367e-06]
+    thermal-conductivity: [ 4.87891298e-02, -2.96261548e-02,  6.87999846e-03, -6.97612480e-04, 2.64071919e-05]
+    model: gas
+    geometry: atom
+    well-depth: 71.4
+    diameter: 3.298
+    note: '*'
+- name: NO
+  composition: {N: 1, O: 1}
+  thermo:
+    model: NASA7
+    temperature-ranges: [200.0, 1000.0, 6000.0]
+    data:
+    - [4.21859896, -4.63988124e-03, 1.10443049e-05, -9.34055507e-09, 2.80554874e-12,
+      9845.09964, 2.28061001]
+    - [3.26071234, 1.19101135e-03, -4.29122646e-07, 6.94481463e-11, -4.03295681e-15,
+      9921.43132, 6.36900518]
+    note: TPIS89
+  transport:
+    viscosity: [-5.32313854e-03,  3.17911064e-03, -6.07224711e-04,  5.28075309e-05, -1.71428747e-06]
+    thermal-conductivity: [ 5.43342342e-02, -2.94822484e-02,  5.95602412e-03, -5.17705773e-04, 1.66600689e-05]
+    model: gas
+    geometry: linear
+    well-depth: 97.53
+    diameter: 3.621
+    polarizability: 1.76
+    rotational-relaxation: 4.0
+- name: N2
+  composition: {N: 2}
+  thermo:
+    model: NASA7
+    temperature-ranges: [200.0, 1000.0, 6000.0]
+    data:
+    - [3.53100528, -1.23660987e-04, -5.02999437e-07, 2.43530612e-09, -1.40881235e-12,
+      -1046.97628, 2.96747468]
+    - [2.95257626, 1.39690057e-03, -4.92631691e-07, 7.86010367e-11, -4.60755321e-15,
+      -923.948645, 5.87189252]
+    note: TPIS78
+  transport:
+    viscosity: [-6.19774334e-03,  3.10220060e-03, -4.86676842e-04,  3.38493661e-05, -8.35864798e-07]
+    thermal-conductivity:  [1.83053379e-01, -1.09547015e-01,  2.42617512e-02, -2.34951732e-03, 8.47122629e-05]
+    model: gas
+    geometry: linear
+    well-depth: 97.53
+    diameter: 3.621
+    polarizability: 1.76
+    rotational-relaxation: 4.0
+
+reactions:
+- equation: N2 + M <=> 2 N + M  # Reaction 1
+  type: three-body
+  rate-constant: {A: 3.0e+22, b: -1.6, Ea: 224951.50535373}
+  efficiencies: {N2: 0.2333, NO: 0.2333, O2: 0.2333}
+- equation: O2 + M <=> 2 O + M  # Reaction 2
+  type: three-body
+  rate-constant: {A: 1.0e+22, b: -1.5, Ea: 117960.43602294}
+  efficiencies: {N2: 0.2, NO: 0.2, O2: 0.2}
+- equation: N2 + O <=> NO + N  # Reaction 4
+  rate-constant: {A: 5.7e+12, b: 0.42, Ea: 85326.57011377}
+- equation: NO + O <=> O2 + N  # Reaction 5
+  rate-constant: {A: 8.4e+12, b: 0.0, Ea: 38551.75975143}
+- equation: N + O + M <=> NO + M # Reaction 6
+  type: three-body
+  rate-constant: {A: 5.0e+15, b: 0.0, Ea: 150033.91037285}
+  efficiencies: {NO: 22.0, N: 22.0, O: 22.0}

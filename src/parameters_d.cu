@@ -38,7 +38,7 @@ cudaField *pAxx_d,*pAyy_d,*pAzz_d,*pAkx_d,*pAky_d,*pAkz_d,*pAix_d,*pAiy_d,*pAiz_
 
 // calculate memory
 cudaField *pAmu_d; // viscous 3d [nz][ny][nx]
-cudaField *pd_d,*pu_d,*pv_d,*pw_d,*pT_d,*pP_d; //  [nz+2*LAP][ny+2*LAP][nx+2*LAP]
+cudaField *pd_d,*pu_d,*pv_d,*pw_d,*pT_d,*pP_d, *pe_d; //  [nz+2*LAP][ny+2*LAP][nx+2*LAP]
 cudaSoA *pf_d,*pfn_d,*pdu_d; // [5][nz][ny][nx]
 
 // memory space for species
