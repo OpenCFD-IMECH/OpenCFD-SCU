@@ -86,14 +86,14 @@ void ana_residual(cudaField PE_d, REAL *E0){
     CUDA_LAUNCH(( cudaMalloc((REAL **)&g_odata, g_odata_size*sizeof(REAL)) ));
 
     int SMEMDIM = blockdim.x*blockdim.y*blockdim.z/64;   //Warpsize is 64
-    CUDA_LAUNCH((add_E_kernel<<<griddim, blockdim, SMEMDIM>>>(PE_d, SMEMDIM, g_odata, job)));
+    CUDA_LAUNCH((add_E_kernel<<<griddim, blockdim, SMEMDIM*sizeof(REAL)>>>(PE_d, SMEMDIM, g_odata, job)));
 
     dim3 blockdim_sum(512);
     dim3 griddim_sum(g_odata_size); 
 
     do{
         griddim_sum.x = (griddim_sum.x + blockdim_sum.x - 1)/blockdim_sum.x;
-        CUDA_LAUNCH(( add_kernel<<<griddim_sum, blockdim_sum, 8>>>(g_odata, g_odata_size) ));
+        CUDA_LAUNCH(( add_kernel<<<griddim_sum, blockdim_sum, 8*sizeof(REAL)>>>(g_odata, g_odata_size) ));
     } while(griddim_sum.x > 1);
 
     CUDA_LAUNCH(( cudaMemcpy(Sum, g_odata, sizeof(REAL), cudaMemcpyDeviceToHost) ));
