@@ -119,7 +119,12 @@ void Init_Jacobian3d()
     }else if(access(filename1, F_OK) == -1){ 
         if(my_id == 0) printf("read 3D mesh data: OCFD3d-Mesh.dat ...\n");
         
-        MPI_File_open(MPI_COMM_WORLD, "OCFD3d-Mesh.dat", MPI_MODE_RDONLY, MPI_INFO_NULL, &tmp_file);
+        int ret = MPI_File_open(MPI_COMM_WORLD, "OCFD3d-Mesh.dat", MPI_MODE_RDONLY, MPI_INFO_NULL, &tmp_file);
+
+        if (ret != MPI_SUCCESS) {
+            fprintf(stderr, "Failed to open file\n");
+            MPI_Abort(MPI_COMM_WORLD, ret);
+        }
         
         MPI_Offset offset = 0;
 
@@ -236,8 +241,8 @@ void Comput_Jacobian3d(){
     exchange_boundary_xyz_packed_dev(pAsz  , pAsz_d);
     exchange_boundary_xyz_packed_dev(pAjac , pAjac_d);
 
-    boundary_Jac3d_Liftbody_Ajac(); //boudary condition for Axx, Ayy, Azz, Aix, Aiy, Aiz , ......
 
+    boundary_Jac3d_Liftbody_Ajac(); //boudary condition for Axx, Ayy, Azz, Aix, Aiy, Aiz , ......
 }
 
 // ----------------------------------------------------------------------------
