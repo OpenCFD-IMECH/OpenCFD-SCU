@@ -195,7 +195,11 @@ void exchange_boundary_x_packed_dev(REAL *hostptr , cudaField * devptr, int Iper
         cudaFieldBoundaryPack(devptr , pack ,job);
         CUDA_CALL(( cudaMemcpy(pack_send_x , pack->ptr , size*sizeof(REAL) , cudaMemcpyDeviceToHost) ))
     }
-    MPI_Sendrecv(pack_send_x , size , OCFD_DATA_TYPE , ID_XM1 , 1 , pack_recv_x , size , OCFD_DATA_TYPE , ID_XP1 , 1 , MPI_COMM_WORLD , &status);
+    if(NPX0 == 1 && Iperiodic1 == 1){
+        pack_recv_x = pack_send_x;
+    } else {
+        MPI_Sendrecv(pack_send_x , size , OCFD_DATA_TYPE , ID_XM1 , 1 , pack_recv_x , size , OCFD_DATA_TYPE , ID_XP1 , 1 , MPI_COMM_WORLD , &status);
+    }
 	if (npx != NPX0 - 1 || Iperiodic1 == 1){
         CUDA_CALL(( cudaMemcpy(pack->ptr , pack_recv_x , size*sizeof(REAL) , cudaMemcpyHostToDevice) ))
         job.start.x = nx_lap;
@@ -203,13 +207,16 @@ void exchange_boundary_x_packed_dev(REAL *hostptr , cudaField * devptr, int Iper
     }
     
 
-
     if(npx != NPX0 - 1 || Iperiodic1 == 1){
         job.start.x = nx;
         cudaFieldBoundaryPack(devptr , pack ,job);
         CUDA_CALL(( cudaMemcpy(pack_send_x , pack->ptr , size*sizeof(REAL) , cudaMemcpyDeviceToHost) ))
     }
-    MPI_Sendrecv(pack_send_x , size , OCFD_DATA_TYPE , ID_XP1 , 1 , pack_recv_x , size , OCFD_DATA_TYPE , ID_XM1 , 1 , MPI_COMM_WORLD , &status);
+    if(NPX0 == 1 && Iperiodic1 == 1){
+        pack_recv_x = pack_send_x;
+    } else {
+        MPI_Sendrecv(pack_send_x , size , OCFD_DATA_TYPE , ID_XP1 , 1 , pack_recv_x , size , OCFD_DATA_TYPE , ID_XM1 , 1 , MPI_COMM_WORLD , &status);
+    }
 	if (npx != 0 || Iperiodic1 == 1){
         CUDA_CALL(( cudaMemcpy(pack->ptr , pack_recv_x , size*sizeof(REAL) , cudaMemcpyHostToDevice) ))
         job.start.x = 0;
@@ -231,21 +238,27 @@ void exchange_boundary_y_packed_dev(REAL *hostptr , cudaField * devptr, int Iper
         cudaFieldBoundaryPack(devptr , pack ,job);
         CUDA_CALL(( cudaMemcpy(pack_send_y , pack->ptr , size*sizeof(REAL) , cudaMemcpyDeviceToHost) ))
     }
-    MPI_Sendrecv(pack_send_y , size , OCFD_DATA_TYPE , ID_YM1 , 1 , pack_recv_y , size , OCFD_DATA_TYPE , ID_YP1 , 1 , MPI_COMM_WORLD , &status);
+    if(NPY0 == 1 && Iperiodic1 == 1){
+        pack_recv_y = pack_send_y;
+    } else {
+        MPI_Sendrecv(pack_send_y , size , OCFD_DATA_TYPE , ID_YM1 , 1 , pack_recv_y , size , OCFD_DATA_TYPE , ID_YP1 , 1 , MPI_COMM_WORLD , &status);
+    }
 	if (npy != NPY0 - 1 || Iperiodic1 == 1){
         CUDA_CALL(( cudaMemcpy(pack->ptr , pack_recv_y , size*sizeof(REAL) , cudaMemcpyHostToDevice) ))
         job.start.y = ny_lap;
         cudaFieldBoundaryUnpack(devptr, pack ,job);
     }
     
-
-
     if(npy != NPY0 - 1 || Iperiodic1 == 1){
         job.start.y = ny;
         cudaFieldBoundaryPack(devptr , pack ,job);
         CUDA_CALL(( cudaMemcpy(pack_send_y , pack->ptr , size*sizeof(REAL) , cudaMemcpyDeviceToHost) ))
     }
-    MPI_Sendrecv(pack_send_y , size , OCFD_DATA_TYPE , ID_YP1 , 1 , pack_recv_y , size , OCFD_DATA_TYPE , ID_YM1 , 1 , MPI_COMM_WORLD , &status);
+    if(NPY0 == 1 && Iperiodic1 == 1){
+        pack_recv_y = pack_send_y;
+    } else {
+        MPI_Sendrecv(pack_send_y , size , OCFD_DATA_TYPE , ID_YP1 , 1 , pack_recv_y , size , OCFD_DATA_TYPE , ID_YM1 , 1 , MPI_COMM_WORLD , &status);
+    }
 	if (npy != 0 || Iperiodic1 == 1){
         CUDA_CALL(( cudaMemcpy(pack->ptr , pack_recv_y , size*sizeof(REAL) , cudaMemcpyHostToDevice) ))
         job.start.y = 0;
@@ -267,20 +280,27 @@ void exchange_boundary_z_packed_dev(REAL *hostptr , cudaField * devptr, int Iper
         cudaFieldBoundaryPack(devptr , pack ,job);
         CUDA_CALL(( cudaMemcpy(pack_send_z , pack->ptr , size*sizeof(REAL) , cudaMemcpyDeviceToHost) ))
     }
-    MPI_Sendrecv(pack_send_z , size , OCFD_DATA_TYPE , ID_ZM1 , 1 , pack_recv_z , size , OCFD_DATA_TYPE , ID_ZP1 , 1 , MPI_COMM_WORLD , &status);
+    if(NPZ0 == 1 && Iperiodic1 == 1){
+        pack_recv_z = pack_send_z;
+    } else {
+        MPI_Sendrecv(pack_send_z , size , OCFD_DATA_TYPE , ID_ZM1 , 1 , pack_recv_z , size , OCFD_DATA_TYPE , ID_ZP1 , 1 , MPI_COMM_WORLD , &status);
+    }
 	if (npz != NPZ0 - 1 || Iperiodic1 == 1){
         CUDA_CALL(( cudaMemcpy(pack->ptr , pack_recv_z , size*sizeof(REAL) , cudaMemcpyHostToDevice) ))
         job.start.z = nz_lap;
         cudaFieldBoundaryUnpack(devptr, pack ,job);
     }
     
-
     if(npz != NPZ0 - 1 || Iperiodic1 == 1){
         job.start.z = nz;
         cudaFieldBoundaryPack(devptr , pack ,job);
         CUDA_CALL(( cudaMemcpy(pack_send_z , pack->ptr , size*sizeof(REAL) , cudaMemcpyDeviceToHost) ))
     }
-    MPI_Sendrecv(pack_send_z , size , OCFD_DATA_TYPE , ID_ZP1 , 1 , pack_recv_z , size , OCFD_DATA_TYPE , ID_ZM1 , 1 , MPI_COMM_WORLD , &status);
+    if(NPZ0 == 1 && Iperiodic1 == 1){
+        pack_recv_z = pack_send_z;
+    } else {
+        MPI_Sendrecv(pack_send_z , size , OCFD_DATA_TYPE , ID_ZP1 , 1 , pack_recv_z , size , OCFD_DATA_TYPE , ID_ZM1 , 1 , MPI_COMM_WORLD , &status);
+    }
 	if (npz != 0 || Iperiodic1 == 1){
         CUDA_CALL(( cudaMemcpy(pack->ptr , pack_recv_z , size*sizeof(REAL) , cudaMemcpyHostToDevice) ))
         job.start.z = 0;

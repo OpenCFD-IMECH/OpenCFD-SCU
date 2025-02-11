@@ -6,7 +6,7 @@ extern "C"{
 
 uint32_t BlockDimX = 8;
 uint32_t BlockDimY = 8;
-uint32_t BlockDimZ = 8;
+uint32_t BlockDimZ = 4;
 
 dim3 BlockDim_X = {8, 8, 4};
 dim3 BlockDim_Y = {8, 8, 4};

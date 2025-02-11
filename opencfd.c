@@ -1,11 +1,3 @@
-//----------------------------------------------------------------------------------------------------------------------------------------   
-// OpenCFD-SC  ,  3-D compressible Navier-Stokes Finite difference Solver 
-// Copyright by LI Xinliang, LHD, Institute of Mechanics, CAS, Email: lixl@imech.ac.cn
-//  
-// The default code is double precision computation
-// If you want to use SINGLE PRECISION computation, you can change   "OCFD_REAL_KIND=8"  to "OCFD_REAL_KIND=4" ,
-// and  "OCFD_DATA_TYPE=MPI_DOUBLE_PRECISION" to "OCFD_DATA_TYPE=MPI_REAL" in the file OpenCFD.h 
-//---------------------------------------------------------------------------------------------------------------------------------------------- 
 #include <stdlib.h>
 #include <stdio.h>
 #include "mpi.h"

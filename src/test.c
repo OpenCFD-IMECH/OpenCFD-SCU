@@ -1,5 +1,6 @@
 #include "test.h"
 #include "parameters.h"
+#include "config_parameters.h"
 
 #include "stdio.h"
 void write_block_me(char * name , REAL * u , int nx , int ny , int nz)    //[nx][ny][nz][n]

@@ -72,6 +72,7 @@ __global__ void add_E_kernel(cudaField pE, int SMEMDIM, REAL *g_odata, cudaJobPa
     if(Id == 0) g_odata[blockIdx.x + gridDim.x*blockIdx.y + gridDim.x*gridDim.y*blockIdx.z] = grad_f0;
 }
 
+
 void ana_residual(cudaField PE_d, REAL *E0){
 
     dim3 size, griddim, blockdim;
@@ -88,12 +89,12 @@ void ana_residual(cudaField PE_d, REAL *E0){
     int SMEMDIM = blockdim.x*blockdim.y*blockdim.z/64;   //Warpsize is 64
     CUDA_LAUNCH((add_E_kernel<<<griddim, blockdim, SMEMDIM*sizeof(REAL)>>>(PE_d, SMEMDIM, g_odata, job)));
 
-    dim3 blockdim_sum(512);
+    dim3 blockdim_sum(256);
     dim3 griddim_sum(g_odata_size); 
 
     do{
         griddim_sum.x = (griddim_sum.x + blockdim_sum.x - 1)/blockdim_sum.x;
-        CUDA_LAUNCH(( add_kernel<<<griddim_sum, blockdim_sum, 8*sizeof(REAL)>>>(g_odata, g_odata_size) ));
+        CUDA_LAUNCH(( add_kernel<<<griddim_sum, blockdim_sum, 4*sizeof(REAL)>>>(g_odata, g_odata_size) ));
     } while(griddim_sum.x > 1);
 
     CUDA_LAUNCH(( cudaMemcpy(Sum, g_odata, sizeof(REAL), cudaMemcpyDeviceToHost) ));
