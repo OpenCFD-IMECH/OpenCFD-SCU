@@ -755,7 +755,7 @@ if(coords <= -ka1){\
 
 
 #define boundp2(coords)\
-if(coords > -kb1){\
+if(coords >= -kb1){\
 	if(coords == -1){\
 		*tmp = stencil[-ka1] + 0.5*minmod2(stencil[-ka1] - stencil[-ka1-1], stencil[-ka1] - stencil[-ka1-1]);\
 	}\
