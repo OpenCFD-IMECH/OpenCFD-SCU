@@ -753,7 +753,7 @@ __global__ void OCFD_weno7_M_kernel(int i, dim3 flagxyzb, cudaSoA f, cudaSoA du,
 	if(flag != 0){
 	    REAL tmp_r, tmp_l; 
 
-		flag = OCFD_bound_scheme_kernel_p(&tmp_r, flagxyzb, coords, &stencil[0], ia1, ib1, job);  
+		flag = OCFD_bound_scheme_kernel_m(&tmp_r, flagxyzb, coords, &stencil[0], ia1, ib1, job);  
 
 		if(flag != 0) tmp_r = OCFD_weno7_kernel_M(&stencil[0]);
 
