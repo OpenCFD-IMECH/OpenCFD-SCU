@@ -132,7 +132,7 @@ __global__ void add_kernel(REAL *g_odata, int g_odata_size){
     if(laneIdx == 0) shared[warpId] = grad_f0;
     __syncthreads();
 
-    grad_f0 = (threadIdx.x < 8)?shared[laneIdx]:0;
+    grad_f0 = (threadIdx.x < 4)?shared[laneIdx]:0;
 
     if(warpId == 0) grad_f0 = warpReduce(grad_f0);
 
@@ -181,12 +181,12 @@ void Comput_grad(cudaField *P, cudaStream_t *stream){
     CUDA_LAUNCH((Comput_grad1_kernel<<<griddim, blockdim, SMEMDIM, *stream>>>(Pk_d, Pi_d, Ps_d, *pAkx_d, *pAky_d, 
         *pAkz_d, *pAix_d, *pAiy_d, *pAiz_d, *pAsx_d, *pAsy_d, *pAsz_d, SMEMDIM, grad_P, g_odata, job)));
 
-    dim3 blockdim_sum(512);
+    dim3 blockdim_sum(256);
     dim3 griddim_sum(g_odata_size); 
 
     do{
         griddim_sum.x = (griddim_sum.x + blockdim_sum.x - 1)/blockdim_sum.x;
-        CUDA_LAUNCH(( add_kernel<<<griddim_sum, blockdim_sum, 8, *stream>>>(g_odata, g_odata_size) ));
+        CUDA_LAUNCH(( add_kernel<<<griddim_sum, blockdim_sum, 4*sizeof(REAL), *stream>>>(g_odata, g_odata_size) ));
     } while(griddim_sum.x > 1);
 
     CUDA_LAUNCH(( cudaMemcpy(Sum, g_odata, sizeof(REAL), cudaMemcpyDeviceToHost) ));
